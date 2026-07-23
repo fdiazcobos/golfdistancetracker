@@ -1,3 +1,144 @@
 <resources>
     <string name="app_name">Golf Distance Tracker</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_field">Field</string>
+    <string name="nav_practice">Practice</string>
+    <string name="nav_bag">Bag</string>
+    <string name="nav_stats">Stats</string>
+    <string name="nav_scorecard">Score</string>
+    <string name="nav_setup">Setup</string>
+
+    <!-- Dashboard -->
+    <string name="dash_title">GOLF TRACKER</string>
+    <string name="dash_hero_title">Master Your Game</string>
+    <string name="dash_hero_subtitle">Track every shot, improve every day.</string>
+    <string name="dash_management">Management Hub</string>
+    <string name="dash_quick_stats">Quick Stats</string>
+    <string name="dash_accuracy">Accuracy</string>
+    <string name="dash_power">Power</string>
+    <string name="dash_tips">Tips &amp; Tricks</string>
+    <string name="dash_did_you_know">Did you know?</string>
+    <string name="dash_tip_aim">Aiming for the center of the green is safer than chasing pins.</string>
+    <string name="dash_gap_alert">Bag Gap Alert: Large gap detected between %1$s and the next club.</string>
+
+    <!-- Session / Field -->
+    <string name="session_new">New Session</string>
+    <string name="session_tracking">Tracking: %1$s</string>
+    <string name="session_change_club">Change Club</string>
+    <string name="session_select_club">Select your club:</string>
+    <string name="session_caddie_recommendation">Caddie Recommendation: %1$s</string>
+    <string name="session_gps_ready">GPS Ready</string>
+    <string name="session_gps_waiting">Waiting for GPS accuracy...</string>
+    <string name="session_location">Location: %1$s</string>
+    <string name="session_mark_start">Mark Start Point</string>
+    <string name="session_mark_end">Mark End Point &amp; Save</string>
+    <string name="session_shot_progress">Shot in progress...</string>
+    <string name="session_distance">Distance: %1$s</string>
+    <string name="session_plays_like">Plays Like: %1$s</string>
+    <string name="session_target_dist">Target Distance (%1$s)</string>
+
+    <!-- Driving Range / Practice -->
+    <string name="practice_title">Driving Range Practice</string>
+    <string name="practice_select_club">Select Club</string>
+    <string name="practice_direction">Direction / Deviation</string>
+    <string name="practice_quality">Shot Quality</string>
+    <string name="practice_pifia">PIFIA</string>
+    <string name="practice_muy_corto">Very Short</string>
+    <string name="practice_corto">Short</string>
+    <string name="practice_bueno">Good</string>
+    <string name="practice_largo">Long</string>
+    <string name="practice_muy_largo">Very Long</string>
+    <string name="practice_malo">Poor</string>
+    <string name="practice_bien">Nice</string>
+    <string name="practice_muy_bien">Great</string>
+    <string name="practice_saved">Shot Saved!</string>
+    <string name="practice_register">Register Shot</string>
+    <string name="practice_dev_far_left">Far Left</string>
+    <string name="practice_dev_left">Left</string>
+    <string name="practice_dev_center">Center</string>
+    <string name="practice_dev_right">Right</string>
+    <string name="practice_dev_far_right">Far Right</string>
+
+    <!-- Golf Bag -->
+    <string name="bag_title">My Golf Bag</string>
+    <string name="bag_empty">Your bag is empty</string>
+    <string name="bag_empty_hint">Add your first club using the + button</string>
+    <string name="bag_add_club">Add New Club</string>
+    <string name="bag_edit_club">Edit Club</string>
+    <string name="bag_type">Club Type</string>
+    <string name="bag_number">Number / Loft</string>
+    <string name="bag_brand">Brand</string>
+    <string name="bag_model">Model (Optional)</string>
+    <string name="bag_delete">Delete</string>
+    <string name="bag_edit">Edit</string>
+    <string name="bag_generic">Generic</string>
+    <string name="bag_default">Default</string>
+
+    <!-- Stats -->
+    <string name="stats_title">Performance Analytics</string>
+    <string name="stats_gapping">Bag Gapping Analysis</string>
+    <string name="stats_gap">Gap: %1$s</string>
+    <string name="stats_large_gap"> (Large Gap!)</string>
+    <string name="stats_avg_dist">Avg Dist</string>
+    <string name="stats_accuracy">Accuracy</string>
+    <string name="stats_avg_dev">Avg Dev</string>
+    <string name="stats_mishits">Mishits</string>
+    <string name="stats_dispersion">Shot Dispersion (Diana)</string>
+    <string name="stats_no_data">No data</string>
+    <string name="stats_filter_all">All</string>
+    <string name="stats_filter_field">Field</string>
+    <string name="stats_filter_practice">Practice</string>
+
+    <!-- Courses -->
+    <string name="course_title">My Golf Courses</string>
+    <string name="course_empty">No courses yet</string>
+    <string name="course_empty_hint">Add the courses where you play to track your performance by hole.</string>
+    <string name="course_add">Add Course</string>
+    <string name="course_edit">Edit Course Info</string>
+    <string name="course_name">Course Name</string>
+    <string name="course_location">Location</string>
+    <string name="course_holes">Number of Holes</string>
+    <string name="course_holes_9">9 Holes</string>
+    <string name="course_holes_18">18 Holes</string>
+    <string name="course_hole_title">Hole %1$d</string>
+    <string name="course_hole_details">Hole %1$d Details</string>
+    <string name="course_par">Par</string>
+    <string name="course_dist_typical">Typical Distance</string>
+    <string name="course_notes">Strategy Notes</string>
+    <string name="course_notes_hint">e.g. Aim left of the bunker</string>
+    <string name="course_save">Save</string>
+    <string name="course_create">Create</string>
+    <string name="course_update">Update</string>
+
+    <!-- Scorecard -->
+    <string name="score_title">Scorecard</string>
+    <string name="score_empty">No active round. Start one!</string>
+    <string name="score_total">Total Strokes: %1$d</string>
+    <string name="score_select_course">Select Course</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_units">Distance Units</string>
+    <string name="settings_meters">Meters (m)</string>
+    <string name="settings_yards">Yards (yd)</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">System Default</string>
+    <string name="settings_theme_light">Light Mode</string>
+    <string name="settings_theme_dark">Dark Mode</string>
+    <string name="settings_lang">Language</string>
+    <string name="settings_lang_auto">Automatic</string>
+    <string name="settings_lang_en">English</string>
+    <string name="settings_lang_es">Spanish</string>
+    <string name="settings_about">About</string>
+    <string name="settings_version">Golf Distance Tracker v1.0</string>
+    <string name="settings_device">Built for Samsung S26 Ultra</string>
+
+    <!-- General -->
+    <string name="common_cancel">Cancel</string>
+    <string name="common_save">Save</string>
+    <string name="common_add">Add</string>
+    <string name="common_back">Back</string>
+    <string name="common_unknown">Unknown</string>
 </resources>

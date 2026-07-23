@@ -1,0 +1,144 @@
+<resources>
+    <string name="app_name">Rastreador de Golf</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Inicio</string>
+    <string name="nav_field">Campo</string>
+    <string name="nav_practice">Práctica</string>
+    <string name="nav_bag">Bolsa</string>
+    <string name="nav_stats">Estadist.</string>
+    <string name="nav_scorecard">Puntos</string>
+    <string name="nav_setup">Ajustes</string>
+
+    <!-- Dashboard -->
+    <string name="dash_title">RASTREADOR GOLF</string>
+    <string name="dash_hero_title">Domina tu Juego</string>
+    <string name="dash_hero_subtitle">Rastrea cada golpe, mejora cada día.</string>
+    <string name="dash_management">Centro de Gestión</string>
+    <string name="dash_quick_stats">Estadísticas Rápidas</string>
+    <string name="dash_accuracy">Precisión</string>
+    <string name="dash_power">Potencia</string>
+    <string name="dash_tips">Consejos y Trucos</string>
+    <string name="dash_did_you_know">¿Sabías que?</string>
+    <string name="dash_tip_aim">Apuntar al centro del green es más seguro que ir directo a la bandera.</string>
+    <string name="dash_gap_alert">Alerta de Hueco: Se detectó un salto grande entre %1$s y el siguiente palo.</string>
+
+    <!-- Session / Field -->
+    <string name="session_new">Nueva Sesión</string>
+    <string name="session_tracking">Rastreando: %1$s</string>
+    <string name="session_change_club">Cambiar Palo</string>
+    <string name="session_select_club">Selecciona tu palo:</string>
+    <string name="session_caddie_recommendation">Recomendación Caddie: %1$s</string>
+    <string name="session_gps_ready">GPS Listo</string>
+    <string name="session_gps_waiting">Esperando precisión GPS...</string>
+    <string name="session_location">Ubicación: %1$s</string>
+    <string name="session_mark_start">Marcar Punto Inicio</string>
+    <string name="session_mark_end">Marcar Fin y Guardar</string>
+    <string name="session_shot_progress">Golpe en progreso...</string>
+    <string name="session_distance">Distancia: %1$s</string>
+    <string name="session_plays_like">Se siente como: %1$s</string>
+    <string name="session_target_dist">Distancia Objetivo (%1$s)</string>
+
+    <!-- Driving Range / Practice -->
+    <string name="practice_title">Práctica Driving Range</string>
+    <string name="practice_select_club">Seleccionar Palo</string>
+    <string name="practice_direction">Dirección / Desviación</string>
+    <string name="practice_quality">Calidad del Golpe</string>
+    <string name="practice_pifia">PIFIA</string>
+    <string name="practice_muy_corto">Muy Corto</string>
+    <string name="practice_corto">Corto</string>
+    <string name="practice_bueno">Bueno</string>
+    <string name="practice_largo">Largo</string>
+    <string name="practice_muy_largo">Muy Largo</string>
+    <string name="practice_malo">Malo</string>
+    <string name="practice_bien">Bien</string>
+    <string name="practice_muy_bien">Muy Bien</string>
+    <string name="practice_saved">¡Golpe Guardado!</string>
+    <string name="practice_register">Registrar Golpe</string>
+    <string name="practice_dev_far_left">Mucho Izq</string>
+    <string name="practice_dev_left">Poco Izq</string>
+    <string name="practice_dev_center">Centro</string>
+    <string name="practice_dev_right">Poco Der</string>
+    <string name="practice_dev_far_right">Mucho Der</string>
+
+    <!-- Golf Bag -->
+    <string name="bag_title">Mi Bolsa de Golf</string>
+    <string name="bag_empty">Tu bolsa está vacía</string>
+    <string name="bag_empty_hint">Añade tu primer palo usando el botón +</string>
+    <string name="bag_add_club">Añadir Nuevo Palo</string>
+    <string name="bag_edit_club">Editar Palo</string>
+    <string name="bag_type">Tipo de Palo</string>
+    <string name="bag_number">Número / Loft</string>
+    <string name="bag_brand">Marca</string>
+    <string name="bag_model">Modelo (Opcional)</string>
+    <string name="bag_delete">Eliminar</string>
+    <string name="bag_edit">Editar</string>
+    <string name="bag_generic">Genérico</string>
+    <string name="bag_default">Por defecto</string>
+
+    <!-- Stats -->
+    <string name="stats_title">Análisis de Rendimiento</string>
+    <string name="stats_gapping">Análisis de Huecos (Gapping)</string>
+    <string name="stats_gap">Hueco: %1$s</string>
+    <string name="stats_large_gap"> (¡Hueco Grande!)</string>
+    <string name="stats_avg_dist">Dist. Media</string>
+    <string name="stats_accuracy">Precisión</string>
+    <string name="stats_avg_dev">Desv. Media</string>
+    <string name="stats_mishits">Pifias</string>
+    <string name="stats_dispersion">Dispersión (Diana)</string>
+    <string name="stats_no_data">Sin datos</string>
+    <string name="stats_filter_all">Todos</string>
+    <string name="stats_filter_field">Campo</string>
+    <string name="stats_filter_practice">Práctica</string>
+
+    <!-- Courses -->
+    <string name="course_title">Mis Canchas de Golf</string>
+    <string name="course_empty">No hay canchas aún</string>
+    <string name="course_empty_hint">Añade las canchas donde juegas para rastrear tu rendimiento por hoyo.</string>
+    <string name="course_add">Añadir Cancha</string>
+    <string name="course_edit">Editar Información</string>
+    <string name="course_name">Nombre de la Cancha</string>
+    <string name="course_location">Ubicación</string>
+    <string name="course_holes">Número de Hoyos</string>
+    <string name="course_holes_9">9 Hoyos</string>
+    <string name="course_holes_18">18 Hoyos</string>
+    <string name="course_hole_title">Hoyo %1$d</string>
+    <string name="course_hole_details">Detalles Hoyo %1$d</string>
+    <string name="course_par">Par</string>
+    <string name="course_dist_typical">Distancia Típica</string>
+    <string name="course_notes">Notas Estratégicas</string>
+    <string name="course_notes_hint">ej: Apuntar a la izquierda del bunker</string>
+    <string name="course_save">Guardar</string>
+    <string name="course_create">Crear</string>
+    <string name="course_update">Actualizar</string>
+
+    <!-- Scorecard -->
+    <string name="score_title">Tarjeta de Puntos</string>
+    <string name="score_empty">Sin ronda activa. ¡Inicia una!</string>
+    <string name="score_total">Total Golpes: %1$d</string>
+    <string name="score_select_course">Seleccionar Cancha</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_units">Unidades de Distancia</string>
+    <string name="settings_meters">Metros (m)</string>
+    <string name="settings_yards">Yardas (yd)</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_system">Sistema</string>
+    <string name="settings_theme_light">Modo Claro</string>
+    <string name="settings_theme_dark">Modo Oscuro</string>
+    <string name="settings_lang">Idioma</string>
+    <string name="settings_lang_auto">Automático</string>
+    <string name="settings_lang_en">Inglés</string>
+    <string name="settings_lang_es">Español</string>
+    <string name="settings_about">Acerca de</string>
+    <string name="settings_version">Rastreador de Golf v1.0</string>
+    <string name="settings_device">Diseñado para Samsung S26 Ultra</string>
+
+    <!-- General -->
+    <string name="common_cancel">Cancelar</string>
+    <string name="common_save">Guardar</string>
+    <string name="common_add">Añadir</string>
+    <string name="common_back">Volver</string>
+    <string name="common_unknown">Desconocido</string>
+</resources>
