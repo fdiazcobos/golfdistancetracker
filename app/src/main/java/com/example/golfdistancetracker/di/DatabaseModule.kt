@@ -17,7 +17,6 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): GolfDatabase {
         return Room.databaseBuilder(context, GolfDatabase::class.java, "golf_db")
-            .fallbackToDestructiveMigration()
             .build()
     }
 

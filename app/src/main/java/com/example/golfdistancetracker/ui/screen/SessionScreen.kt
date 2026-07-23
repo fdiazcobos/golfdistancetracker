@@ -112,12 +112,23 @@ fun ClubSelectionGrid(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(clubs) { club ->
+                val usage = uiState.clubUsage[club.id] ?: 0
                 Button(
                     onClick = { onSelect(club) },
-                    modifier = Modifier.height(64.dp),
-                    colors = if (club == uiState.recommendedClub) ButtonDefaults.buttonColors() else ButtonDefaults.filledTonalButtonColors()
+                    modifier = Modifier.height(72.dp),
+                    colors = if (club == uiState.recommendedClub) ButtonDefaults.buttonColors() else ButtonDefaults.filledTonalButtonColors(),
+                    contentPadding = PaddingValues(4.dp)
                 ) {
-                    Text(club.name)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(club.name, maxLines = 1)
+                        if (usage > 0) {
+                            Text(
+                                stringResource(R.string.session_used, usage), 
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (club == uiState.recommendedClub) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                 }
             }
         }

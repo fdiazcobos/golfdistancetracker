@@ -79,8 +79,8 @@ fun CourseManagementScreen(viewModel: CourseViewModel = hiltViewModel()) {
         if (showAddDialog) {
             CourseDialog(
                 onDismiss = { showAddDialog = false },
-                onSave = { name, loc, holes ->
-                    viewModel.addCourse(name, loc, holes)
+                onSave = { name, loc, holes, isPar3 ->
+                    viewModel.addCourse(name, loc, holes, isPar3)
                     showAddDialog = false
                 }
             )
@@ -90,8 +90,8 @@ fun CourseManagementScreen(viewModel: CourseViewModel = hiltViewModel()) {
             CourseDialog(
                 initialCourse = courseToEdit,
                 onDismiss = { courseToEdit = null },
-                onSave = { name, loc, holes ->
-                    viewModel.updateCourse(courseToEdit!!.copy(name = name, location = loc, numberOfHoles = holes))
+                onSave = { name, loc, holes, isPar3 ->
+                    viewModel.updateCourse(courseToEdit!!.copy(name = name, location = loc, numberOfHoles = holes, isPar3 = isPar3))
                     courseToEdit = null
                 }
             )
@@ -135,7 +135,7 @@ fun CourseItem(course: Course, onClick: () -> Unit, onEdit: () -> Unit, onDelete
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.secondary)
                     Spacer(Modifier.width(4.dp))
-                    Text("${course.numberOfHoles} ${stringResource(R.string.nav_field)} • ${course.location ?: stringResource(R.string.common_unknown)}", style = MaterialTheme.typography.bodyMedium)
+                    Text("${course.numberOfHoles} Holes • ${course.location ?: stringResource(R.string.common_unknown)} ${if(course.isPar3) "(Par 3)" else ""}", style = MaterialTheme.typography.bodyMedium)
                 }
             }
             Row {
@@ -250,10 +250,15 @@ fun HoleDetailDialog(hole: com.example.golfdistancetracker.data.entity.Hole, onD
 }
 
 @Composable
-fun CourseDialog(initialCourse: Course? = null, onDismiss: () -> Unit, onSave: (String, String?, Int) -> Unit) {
+fun CourseDialog(
+    initialCourse: Course? = null, 
+    onDismiss: () -> Unit, 
+    onSave: (String, String?, Int, Boolean) -> Unit
+) {
     var name by remember { mutableStateOf(initialCourse?.name ?: "") }
     var location by remember { mutableStateOf(initialCourse?.location ?: "") }
     var holes by remember { mutableIntStateOf(initialCourse?.numberOfHoles ?: 18) }
+    var isPar3 by remember { mutableStateOf(initialCourse?.isPar3 ?: false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -264,20 +269,24 @@ fun CourseDialog(initialCourse: Course? = null, onDismiss: () -> Unit, onSave: (
                 OutlinedTextField(value = location, onValueChange = { location = it }, label = { Text(stringResource(R.string.course_location)) }, modifier = Modifier.fillMaxWidth())
                 
                 Text(stringResource(R.string.course_holes), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = holes == 9, onClick = { holes = 9 })
-                        Text(stringResource(R.string.course_holes_9))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(6, 9, 18).forEach { h ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = holes == h, onClick = { holes = h })
+                            Text("$h")
+                        }
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = holes == 18, onClick = { holes = 18 })
-                        Text(stringResource(R.string.course_holes_18))
-                    }
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = isPar3, onCheckedChange = { isPar3 = it })
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.course_par_3), style = MaterialTheme.typography.bodyMedium)
                 }
             }
         },
         confirmButton = {
-            Button(onClick = { onSave(name, location.ifEmpty { null }, holes) }) {
+            Button(onClick = { onSave(name, location.ifEmpty { null }, holes, isPar3) }) {
                 Text(if (initialCourse == null) stringResource(R.string.course_create) else stringResource(R.string.course_update))
             }
         },

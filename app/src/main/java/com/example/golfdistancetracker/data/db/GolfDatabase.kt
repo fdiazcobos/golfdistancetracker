@@ -11,7 +11,7 @@ import com.example.golfdistancetracker.data.entity.*
 
 @Database(
     entities = [Club::class, Shot::class, Course::class, Hole::class, Round::class, HoleScore::class], 
-    version = 6, 
+    version = 7, 
     exportSchema = false
 )
 @TypeConverters(Converters::class)

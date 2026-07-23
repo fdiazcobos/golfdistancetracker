@@ -10,6 +10,7 @@ import com.example.golfdistancetracker.data.entity.ShotType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 data class DrivingRangeUiState(
@@ -17,7 +18,9 @@ data class DrivingRangeUiState(
     val deviation: Float = 0f, // -2 to 2
     val quality: Int = 1, // 0: Malo, 1: Bien, 2: Muy Bien
     val isMishit: Boolean = false,
-    val saveSuccess: Boolean = false
+    val saveSuccess: Boolean = false,
+    val sessionShotCount: Int = 0,
+    val currentSessionId: String = UUID.randomUUID().toString()
 )
 
 @HiltViewModel
@@ -32,7 +35,13 @@ class DrivingRangeViewModel @Inject constructor(
     val clubs = clubDao.getAllClubs().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun selectClub(club: Club) {
-        _uiState.update { it.copy(selectedClub = club) }
+        val isPutter = club.type == "Putter"
+        _uiState.update { it.copy(
+            selectedClub = club,
+            quality = if (isPutter) 0 else 1, // "Bueno" for putter is index 0 in my list
+            deviation = 0f,
+            isMishit = false
+        ) }
     }
 
     fun updateDeviation(value: Float) {
@@ -56,14 +65,29 @@ class DrivingRangeViewModel @Inject constructor(
                 Shot(
                     clubId = club.id,
                     shotType = ShotType.DRIVING_RANGE,
+                    practiceSessionId = state.currentSessionId,
                     deviation = state.deviation,
                     quality = state.quality,
                     isMishit = state.isMishit
                 )
             )
-            _uiState.update { it.copy(saveSuccess = true) }
-            kotlinx.coroutines.delay(2000)
+            
+            // Auto-reset UI state but keep the club
+            val isPutter = club.type == "Putter"
+            _uiState.update { it.copy(
+                saveSuccess = true,
+                sessionShotCount = it.sessionShotCount + 1,
+                deviation = 0f,
+                quality = if (isPutter) 0 else 1,
+                isMishit = false
+            ) }
+            
+            kotlinx.coroutines.delay(1500)
             _uiState.update { it.copy(saveSuccess = false) }
         }
+    }
+    
+    fun startNewSession() {
+        _uiState.update { DrivingRangeUiState() }
     }
 }

@@ -17,11 +17,12 @@ class CourseViewModel @Inject constructor(
 ) : ViewModel() {
     val courses = courseDao.getAllCourses().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun addCourse(name: String, location: String?, holes: Int) {
+    fun addCourse(name: String, location: String?, holes: Int, isPar3: Boolean) {
         viewModelScope.launch {
-            val courseId = courseDao.insertCourse(Course(name = name, location = location, numberOfHoles = holes))
+            val courseId = courseDao.insertCourse(Course(name = name, location = location, numberOfHoles = holes, isPar3 = isPar3))
+            val defaultPar = if (isPar3) 3 else 4
             for (i in 1..holes) {
-                courseDao.insertHole(Hole(courseId = courseId, holeNumber = i, par = 4))
+                courseDao.insertHole(Hole(courseId = courseId, holeNumber = i, par = defaultPar))
             }
         }
     }

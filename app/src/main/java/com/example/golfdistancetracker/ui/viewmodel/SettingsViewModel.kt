@@ -32,6 +32,12 @@ class SettingsViewModel @Inject constructor(
         LanguagePreference.AUTO
     )
 
+    val handicap = preferenceManager.handicap.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        ""
+    )
+
     fun updateUnit(unit: DistanceUnit) {
         viewModelScope.launch { preferenceManager.updateDistanceUnit(unit) }
     }
@@ -42,5 +48,9 @@ class SettingsViewModel @Inject constructor(
 
     fun updateLanguage(lang: LanguagePreference) {
         viewModelScope.launch { preferenceManager.updateLanguage(lang) }
+    }
+
+    fun updateHandicap(value: String) {
+        viewModelScope.launch { preferenceManager.updateHandicap(value) }
     }
 }

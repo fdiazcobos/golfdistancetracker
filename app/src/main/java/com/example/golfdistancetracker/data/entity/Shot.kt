@@ -13,6 +13,7 @@ data class Shot(
     val clubId: Long,
     val holeId: Long? = null,
     val shotType: ShotType = ShotType.FIELD,
+    val practiceSessionId: String? = null, // To group driving range sessions
     
     // GPS Data (Optional for Practice)
     val startLatitude: Double? = null,

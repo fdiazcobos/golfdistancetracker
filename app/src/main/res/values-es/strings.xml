@@ -36,6 +36,7 @@
     <string name="session_mark_end">Marcar Fin y Guardar</string>
     <string name="session_shot_progress">Golpe en progreso...</string>
     <string name="session_distance">Distancia: %1$s</string>
+    <string name="session_used">Usado: %1$d</string>
     <string name="session_plays_like">Se siente como: %1$s</string>
     <string name="session_target_dist">Distancia Objetivo (%1$s)</string>
 
@@ -102,6 +103,7 @@
     <string name="course_holes">Número de Hoyos</string>
     <string name="course_holes_9">9 Hoyos</string>
     <string name="course_holes_18">18 Hoyos</string>
+    <string name="course_par_3">Cancha Par 3</string>
     <string name="course_hole_title">Hoyo %1$d</string>
     <string name="course_hole_details">Detalles Hoyo %1$d</string>
     <string name="course_par">Par</string>

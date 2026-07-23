@@ -20,6 +20,7 @@ import com.example.golfdistancetracker.ui.viewmodel.SettingsViewModel
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val currentUnit by viewModel.distanceUnit.collectAsState()
     val currentTheme by viewModel.themePreference.collectAsState()
+    val userHandicap by viewModel.handicap.collectAsState()
 
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.settings_title)) }) }
@@ -32,6 +33,18 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
+            // Profile
+            SettingsGroup(title = "Profile") {
+                OutlinedTextField(
+                    value = userHandicap,
+                    onValueChange = { viewModel.updateHandicap(it) },
+                    label = { Text("My Handicap") },
+                    placeholder = { Text("e.g. 15.2") },
+                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+                )
+            }
+
             // Units
             SettingsGroup(title = stringResource(R.string.settings_units)) {
                 UnitOption(

@@ -39,7 +39,8 @@ data class SessionUiState(
     val weather: WeatherInfo? = null,
     val targetDistanceMeters: Double? = null,
     val playsLikeDistance: Double? = null,
-    val recommendedClub: Club? = null
+    val recommendedClub: Club? = null,
+    val clubUsage: Map<Long, Int> = emptyMap()
 )
 
 @HiltViewModel
@@ -59,6 +60,16 @@ class SessionViewModel @Inject constructor(
     val clubs = clubDao.getAllClubs().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
+        viewModelScope.launch {
+            shotDao.getAllShots().collect { shots ->
+                val today = System.currentTimeMillis() - 24 * 60 * 60 * 1000
+                val usage = shots
+                    .filter { it.timestamp > today && it.shotType == ShotType.FIELD }
+                    .groupBy { it.clubId }
+                    .mapValues { it.value.size }
+                _uiState.update { it.copy(clubUsage = usage) }
+            }
+        }
         viewModelScope.launch {
             locationHelper.getLocationUpdates().collect { location ->
                 _uiState.update { it.copy(
@@ -126,7 +137,7 @@ class SessionViewModel @Inject constructor(
     }
 
     fun resetSession() {
-        _uiState.update { it.copy(selectedClub = null, startLocation = null) }
+        _uiState.update { it.copy(selectedClub = null, startLocation = null, targetDistanceMeters = null, playsLikeDistance = null) }
     }
 
     fun markStart() {
@@ -172,7 +183,13 @@ class SessionViewModel @Inject constructor(
                     )
                 )
             }
-            _uiState.update { it.copy(lastShotDistance = distance, lastShotLatDev = latDev, startLocation = null) }
+            _uiState.update { it.copy(
+                lastShotDistance = distance, 
+                lastShotLatDev = latDev, 
+                startLocation = null,
+                targetDistanceMeters = null,
+                playsLikeDistance = null
+            ) }
         }
     }
 }

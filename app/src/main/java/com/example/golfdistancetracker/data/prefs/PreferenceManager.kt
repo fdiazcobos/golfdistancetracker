@@ -31,6 +31,15 @@ class PreferenceManager @Inject constructor(
     private val UNIT_KEY = stringPreferencesKey("distance_unit")
     private val THEME_KEY = stringPreferencesKey("theme_preference")
     private val LANG_KEY = stringPreferencesKey("language_preference")
+    private val HANDICAP_KEY = stringPreferencesKey("handicap_profile")
+
+    val handicap: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[HANDICAP_KEY] ?: ""
+    }
+
+    suspend fun updateHandicap(value: String) {
+        context.dataStore.edit { prefs -> prefs[HANDICAP_KEY] = value }
+    }
 
     val distanceUnit: Flow<DistanceUnit> = context.dataStore.data.map { prefs ->
         val unitName = prefs[UNIT_KEY] ?: DistanceUnit.METERS.name

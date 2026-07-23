@@ -21,7 +21,18 @@ fun DrivingRangeScreen(viewModel: DrivingRangeViewModel = hiltViewModel()) {
     val clubs by viewModel.clubs.collectAsState()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.practice_title)) }) }
+        topBar = { 
+            TopAppBar(
+                title = { Text(stringResource(R.string.practice_title)) },
+                actions = {
+                    Text(
+                        "Shots: ${uiState.sessionShotCount}", 
+                        modifier = Modifier.padding(end = 16.dp),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+            ) 
+        }
     ) { padding ->
         Column(
             modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp),

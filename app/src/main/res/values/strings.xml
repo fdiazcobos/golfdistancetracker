@@ -36,6 +36,7 @@
     <string name="session_mark_end">Mark End Point &amp; Save</string>
     <string name="session_shot_progress">Shot in progress...</string>
     <string name="session_distance">Distance: %1$s</string>
+    <string name="session_used">Used: %1$d</string>
     <string name="session_plays_like">Plays Like: %1$s</string>
     <string name="session_target_dist">Target Distance (%1$s)</string>
 
@@ -102,6 +103,7 @@
     <string name="course_holes">Number of Holes</string>
     <string name="course_holes_9">9 Holes</string>
     <string name="course_holes_18">18 Holes</string>
+    <string name="course_par_3">Par 3 Course</string>
     <string name="course_hole_title">Hole %1$d</string>
     <string name="course_hole_details">Hole %1$d Details</string>
     <string name="course_par">Par</string>
