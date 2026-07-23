@@ -20,7 +20,6 @@ import com.example.golfdistancetracker.ui.viewmodel.SettingsViewModel
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val currentUnit by viewModel.distanceUnit.collectAsState()
     val currentTheme by viewModel.themePreference.collectAsState()
-    val currentLang by viewModel.languagePreference.collectAsState()
 
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.settings_title)) }) }
@@ -63,25 +62,6 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     label = stringResource(R.string.settings_theme_dark),
                     selected = currentTheme == ThemePreference.DARK,
                     onClick = { viewModel.updateTheme(ThemePreference.DARK) }
-                )
-            }
-
-            // Language
-            SettingsGroup(title = stringResource(R.string.settings_lang)) {
-                UnitOption(
-                    label = stringResource(R.string.settings_lang_auto),
-                    selected = currentLang == LanguagePreference.AUTO,
-                    onClick = { viewModel.updateLanguage(LanguagePreference.AUTO) }
-                )
-                UnitOption(
-                    label = stringResource(R.string.settings_lang_en),
-                    selected = currentLang == LanguagePreference.ENGLISH,
-                    onClick = { viewModel.updateLanguage(LanguagePreference.ENGLISH) }
-                )
-                UnitOption(
-                    label = stringResource(R.string.settings_lang_es),
-                    selected = currentLang == LanguagePreference.SPANISH,
-                    onClick = { viewModel.updateLanguage(LanguagePreference.SPANISH) }
                 )
             }
 

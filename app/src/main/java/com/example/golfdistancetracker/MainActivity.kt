@@ -15,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.*
 import com.example.golfdistancetracker.auth.AuthManager
-import com.example.golfdistancetracker.data.prefs.LanguagePreference
 import com.example.golfdistancetracker.data.prefs.ThemePreference
 import com.example.golfdistancetracker.ui.screen.*
 import com.example.golfdistancetracker.ui.theme.GolfDistanceTrackerTheme
@@ -36,7 +35,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             val settingsViewModel: SettingsViewModel = androidx.hilt.navigation.compose.hiltViewModel()
             val themePref by settingsViewModel.themePreference.collectAsState()
-            val langPref by settingsViewModel.languagePreference.collectAsState()
 
             val darkTheme = when (themePref) {
                 ThemePreference.SYSTEM -> isSystemInDarkTheme()
@@ -44,22 +42,8 @@ class MainActivity : ComponentActivity() {
                 ThemePreference.DARK -> true
             }
 
-            // Apply Language
-            val locale = when (langPref) {
-                LanguagePreference.AUTO -> Locale.getDefault()
-                LanguagePreference.ENGLISH -> Locale.forLanguageTag("en")
-                LanguagePreference.SPANISH -> Locale.forLanguageTag("es")
-            }
-            
-            val configuration = androidx.compose.ui.platform.LocalConfiguration.current
-            configuration.setLocale(locale)
-            
-            CompositionLocalProvider(
-                androidx.compose.ui.platform.LocalContext provides androidx.compose.ui.platform.LocalContext.current.createConfigurationContext(configuration)
-            ) {
-                GolfDistanceTrackerTheme(darkTheme = darkTheme) {
-                    MainApp(authManager)
-                }
+            GolfDistanceTrackerTheme(darkTheme = darkTheme) {
+                MainApp(authManager)
             }
         }
     }

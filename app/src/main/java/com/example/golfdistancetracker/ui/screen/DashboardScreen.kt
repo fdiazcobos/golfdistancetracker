@@ -120,7 +120,7 @@ fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit
                 }
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    val avgAccuracy = stats.map { it.accuracyPct }.average().takeIf { !it.isNaN() } ?: 0.0
+                    val avgAccuracy = stats.map { it.accuracyPct }.average().let { if(it.isNaN()) 0.0 else it }
                     DashboardStatCard(
                         modifier = Modifier.weight(1f),
                         title = stringResource(R.string.dash_accuracy),
