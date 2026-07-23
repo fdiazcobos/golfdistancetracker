@@ -38,6 +38,7 @@ data class SessionUiState(
     val distanceUnit: DistanceUnit = DistanceUnit.METERS,
     val weather: WeatherInfo? = null,
     val targetDistanceMeters: Double? = null,
+    val playsLikeDistance: Double? = null,
     val recommendedClub: Club? = null
 )
 
@@ -70,6 +71,7 @@ class SessionViewModel @Inject constructor(
         viewModelScope.launch {
             compassHelper.getHeadingUpdates().collect { heading ->
                 _uiState.update { it.copy(currentHeading = heading) }
+                updateCaddieInsights()
             }
         }
         viewModelScope.launch {
@@ -85,18 +87,38 @@ class SessionViewModel @Inject constructor(
             _uiState.update { it.copy(
                 weather = WeatherInfo(response.main.temp, response.wind.speed, response.wind.deg)
             ) }
+            updateCaddieInsights()
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
     @kotlinx.coroutines.ExperimentalCoroutinesApi
-    fun updateTargetDistance(dist: Double?) {
+    private fun updateCaddieInsights() {
+        val state = _uiState.value
+        val target = state.targetDistanceMeters ?: return
+        val weather = state.weather
+        
+        val playsLike = if (weather != null) {
+            CaddieBrain.calculatePlaysLikeDistance(
+                target,
+                weather.windSpeed,
+                weather.windDeg,
+                state.currentHeading
+            )
+        } else target
+
         viewModelScope.launch {
             val stats = repository.clubStats.first()
-            val recommendation = dist?.let { CaddieBrain.recommendClub(it, stats) }
-            _uiState.update { it.copy(targetDistanceMeters = dist, recommendedClub = recommendation) }
+            val recommendation = CaddieBrain.recommendClub(playsLike, stats)
+            _uiState.update { it.copy(playsLikeDistance = playsLike, recommendedClub = recommendation) }
         }
+    }
+
+    @kotlinx.coroutines.ExperimentalCoroutinesApi
+    fun updateTargetDistance(dist: Double?) {
+        _uiState.update { it.copy(targetDistanceMeters = dist) }
+        updateCaddieInsights()
     }
 
     fun selectClub(club: Club) {

@@ -1,10 +1,13 @@
 package com.example.golfdistancetracker.ui.screen
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,6 +38,10 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
             FilterSection(filters.shotType) { viewModel.updateShotTypeFilter(it) }
             
             LazyColumn(modifier = Modifier.fillMaxSize()) {
+                item {
+                    GappingAnalysisSection(stats)
+                }
+                
                 items(stats) { stat ->
                     if (stat.shots.isNotEmpty()) {
                         ClubStatsCard(stat)
@@ -43,6 +50,58 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
             }
         }
     }
+}
+
+@Composable
+fun GappingAnalysisSection(stats: List<ClubStats>) {
+    if (stats.size < 2) return
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Bag Gapping Analysis", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(16.dp))
+        
+        stats.forEach { stat ->
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
+                Text(stat.club.name, modifier = Modifier.width(80.dp), style = MaterialTheme.typography.labelMedium)
+                
+                Box(modifier = Modifier.weight(1f).height(24.dp)) {
+                    val maxDist = stats.maxOf { it.averageDistance ?: 1.0 }
+                    val progress = (stat.averageDistance ?: 0.0) / maxDist
+                    
+                    Box(modifier = Modifier.fillMaxWidth(progress.toFloat()).fillMaxHeight().background(MaterialTheme.colorScheme.primary, androidx.compose.foundation.shape.RoundedCornerShape(4.dp)))
+                    
+                    Text(
+                        UnitConverter.formatDistance(stat.averageDistance, stat.unit), 
+                        modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp),
+                        color = if (progress > 0.8) Color.White else Color.Black,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+            }
+            
+            stat.gapToNext?.let { gap ->
+                val isLargeGap = gap > 15.0
+                val isSmallGap = gap < 5.0
+                
+                Row(modifier = Modifier.padding(start = 80.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        if (isLargeGap) Icons.Default.Warning else Icons.Default.VerticalAlignBottom,
+                        contentDescription = null,
+                        modifier = Modifier.size(12.dp),
+                        tint = if (isLargeGap) Color(0xFFD32F2F) else Color.Gray
+                    )
+                    Text(
+                        "Gap: ${UnitConverter.formatDistance(gap, stat.unit)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isLargeGap) Color(0xFFD32F2F) else if (isSmallGap) Color(0xFF1976D2) else Color.Gray,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                    if (isLargeGap) Text(" (Large Gap!)", color = Color(0xFFD32F2F), style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+    }
+    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

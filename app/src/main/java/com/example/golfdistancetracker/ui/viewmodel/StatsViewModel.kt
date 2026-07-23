@@ -24,7 +24,8 @@ data class ClubStats(
     val accuracyPct: Double,
     val mishitCount: Int,
     val shots: List<Shot>,
-    val unit: DistanceUnit = DistanceUnit.METERS
+    val unit: DistanceUnit = DistanceUnit.METERS,
+    val gapToNext: Double? = null
 )
 
 @HiltViewModel
@@ -40,7 +41,7 @@ class StatsViewModel @Inject constructor(
         repository.clubStats,
         _filters
     ) { allStats, filters ->
-        allStats.map { stat ->
+        val processed = allStats.map { stat ->
             val filteredShots = stat.shots.filter { shot ->
                 (filters.shotType == null || shot.shotType == filters.shotType) &&
                 (filters.startDate == null || shot.timestamp >= filters.startDate)
@@ -62,6 +63,15 @@ class StatsViewModel @Inject constructor(
                 mishitCount = mishits,
                 shots = filteredShots
             )
+        }.sortedByDescending { it.averageDistance ?: 0.0 }
+
+        // Calculate Gaps
+        processed.mapIndexed { index, stat ->
+            val nextStat = processed.getOrNull(index + 1)
+            val gap = if (stat.averageDistance != null && nextStat?.averageDistance != null) {
+                stat.averageDistance - nextStat.averageDistance
+            } else null
+            stat.copy(gapToNext = gap)
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 

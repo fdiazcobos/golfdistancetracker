@@ -134,16 +134,27 @@ fun TrackingUI(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Target Input
-        OutlinedTextField(
-            value = targetInput,
-            onValueChange = { 
-                targetInput = it
-                onTargetChange(it.toDoubleOrNull())
-            },
-            label = { Text("Target Distance (${if(uiState.distanceUnit == com.example.golfdistancetracker.data.prefs.DistanceUnit.YARDS) "yd" else "m"})") },
-            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth()
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(
+                value = targetInput,
+                onValueChange = { 
+                    targetInput = it
+                    onTargetChange(it.toDoubleOrNull())
+                },
+                label = { Text("Target Distance (${if(uiState.distanceUnit == com.example.golfdistancetracker.data.prefs.DistanceUnit.YARDS) "yd" else "m"})") },
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            if (uiState.playsLikeDistance != null && uiState.playsLikeDistance != uiState.targetDistanceMeters) {
+                Text(
+                    "Plays Like: ${UnitConverter.formatDistance(uiState.playsLikeDistance, uiState.distanceUnit)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
 
         // Visual Compass
         Box(contentAlignment = Alignment.Center, modifier = Modifier.size(160.dp)) {

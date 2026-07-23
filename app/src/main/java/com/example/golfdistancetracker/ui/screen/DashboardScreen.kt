@@ -97,6 +97,25 @@ fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit
             item {
                 Text("Quick Stats", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(8.dp))
+                
+                val largeGaps = stats.filter { (it.gapToNext ?: 0.0) > 15.0 }
+                if (largeGaps.isNotEmpty()) {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                    ) {
+                        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "Bag Gap Alert: Large gap detected between ${largeGaps.first().club.name} and the next club.",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    }
+                }
+
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     val avgAccuracy = stats.map { it.accuracyPct }.average().takeIf { !it.isNaN() } ?: 0.0
                     DashboardStatCard(
