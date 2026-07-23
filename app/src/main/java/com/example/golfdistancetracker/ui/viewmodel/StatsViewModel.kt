@@ -2,6 +2,7 @@ package com.example.golfdistancetracker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.golfdistancetracker.data.dao.ShotDao
 import com.example.golfdistancetracker.data.entity.Club
 import com.example.golfdistancetracker.data.entity.Shot
 import com.example.golfdistancetracker.data.entity.ShotType
@@ -9,12 +10,20 @@ import com.example.golfdistancetracker.data.prefs.DistanceUnit
 import com.example.golfdistancetracker.data.repository.GolfRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class StatsFilters(
     val selectedClubIds: Set<Long> = emptySet(),
     val shotType: ShotType? = null,
     val startDate: Long? = null
+)
+
+data class QualityBreakdown(
+    val misshotPct: Double = 0.0,
+    val poorPct: Double = 0.0,
+    val goodPct: Double = 0.0,
+    val greatPct: Double = 0.0
 )
 
 data class ClubStats(
@@ -25,12 +34,14 @@ data class ClubStats(
     val mishitCount: Int,
     val shots: List<Shot>,
     val unit: DistanceUnit = DistanceUnit.METERS,
-    val gapToNext: Double? = null
+    val gapToNext: Double? = null,
+    val qualityBreakdown: QualityBreakdown = QualityBreakdown()
 )
 
 @HiltViewModel
 class StatsViewModel @Inject constructor(
-    private val repository: GolfRepository
+    private val repository: GolfRepository,
+    private val shotDao: ShotDao
 ) : ViewModel() {
 
     private val _filters = MutableStateFlow(StatsFilters())
@@ -47,6 +58,16 @@ class StatsViewModel @Inject constructor(
                 (filters.startDate == null || shot.timestamp >= filters.startDate)
             }
             
+            val total = filteredShots.size.toDouble()
+            val breakdown = if (total > 0) {
+                QualityBreakdown(
+                    misshotPct = filteredShots.count { it.isMishit }.toDouble() / total,
+                    poorPct = filteredShots.count { !it.isMishit && it.quality == 0 }.toDouble() / total,
+                    goodPct = filteredShots.count { !it.isMishit && it.quality == 1 }.toDouble() / total,
+                    greatPct = filteredShots.count { !it.isMishit && it.quality == 2 }.toDouble() / total
+                )
+            } else QualityBreakdown()
+
             val avgDist = filteredShots.mapNotNull { it.distance }.average().takeIf { !it.isNaN() }
             val avgLatDev = filteredShots.mapNotNull { it.lateralDeviation }.average().takeIf { !it.isNaN() }
             val mishits = filteredShots.count { it.isMishit }
@@ -54,18 +75,18 @@ class StatsViewModel @Inject constructor(
             val accurateShots = filteredShots.count { 
                 it.quality == 2 || (it.deviation != null && Math.abs(it.deviation) < 0.5f) 
             }
-            val accuracy = if (filteredShots.isNotEmpty()) accurateShots.toDouble() / filteredShots.size else 0.0
+            val accuracy = if (total > 0) accurateShots.toDouble() / total else 0.0
 
             stat.copy(
                 averageDistance = avgDist,
                 avgLatDev = avgLatDev,
                 accuracyPct = accuracy,
                 mishitCount = mishits,
-                shots = filteredShots
+                shots = filteredShots,
+                qualityBreakdown = breakdown
             )
         }.sortedByDescending { it.averageDistance ?: 0.0 }
 
-        // Calculate Gaps
         processed.mapIndexed { index, stat ->
             val nextStat = processed.getOrNull(index + 1)
             val gap = if (stat.averageDistance != null && nextStat?.averageDistance != null) {
@@ -77,5 +98,11 @@ class StatsViewModel @Inject constructor(
 
     fun updateShotTypeFilter(type: ShotType?) {
         _filters.update { it.copy(shotType = type) }
+    }
+
+    fun resetAllStats() {
+        viewModelScope.launch {
+            shotDao.deleteAllShots()
+        }
     }
 }

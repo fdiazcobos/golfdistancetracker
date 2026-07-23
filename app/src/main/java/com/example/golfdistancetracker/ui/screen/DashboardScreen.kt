@@ -12,6 +12,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -144,12 +145,12 @@ fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit
                 Spacer(Modifier.height(8.dp))
                 ElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier.size(48.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), androidx.compose.foundation.shape.CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.TipsAndUpdates, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        }
+                        AsyncImage(
+                            model = "https://images.unsplash.com/photo-1591491719183-8a994943bc7b?q=80&w=200&auto=format&fit=crop",
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp).clip(androidx.compose.foundation.shape.CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
                         Spacer(modifier = Modifier.width(16.dp))
                         Column {
                             Text(stringResource(R.string.dash_did_you_know), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)

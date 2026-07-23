@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -76,21 +76,41 @@ fun ScorecardScreen(viewModel: RoundViewModel = hiltViewModel()) {
 
 @Composable
 fun HoleScoreItem(score: HoleScore, onUpdate: (HoleScore) -> Unit) {
+    // Basic logic assuming par 4 if not known
+    val par = 4 
+    val diff = score.strokes - par
+    val label = if (score.strokes > 0) {
+        when {
+            score.strokes == 1 -> "Hole in One!"
+            diff <= -2 -> stringResource(R.string.score_eagle)
+            diff == -1 -> stringResource(R.string.score_birdie)
+            diff == 0 -> stringResource(R.string.score_par_label)
+            diff == 1 -> stringResource(R.string.score_bogey)
+            diff >= 2 -> stringResource(R.string.score_double_bogey)
+            else -> ""
+        }
+    } else ""
+
     ElevatedCard(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(stringResource(R.string.course_hole_title, score.holeNumber), fontWeight = FontWeight.Bold)
+            Column {
+                Text(stringResource(R.string.course_hole_title, score.holeNumber), fontWeight = FontWeight.Bold)
+                if (label.isNotEmpty()) {
+                    Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                }
+            }
             
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { if(score.strokes > 0) onUpdate(score.copy(strokes = score.strokes - 1)) }) {
-                    Text("-", style = MaterialTheme.typography.headlineMedium)
+                    Icon(Icons.Default.Remove, contentDescription = null)
                 }
                 Text("${score.strokes}", modifier = Modifier.padding(horizontal = 8.dp), style = MaterialTheme.typography.titleLarge)
                 IconButton(onClick = { onUpdate(score.copy(strokes = score.strokes + 1)) }) {
-                    Text("+", style = MaterialTheme.typography.headlineMedium)
+                    Icon(Icons.Default.Add, contentDescription = null)
                 }
             }
         }

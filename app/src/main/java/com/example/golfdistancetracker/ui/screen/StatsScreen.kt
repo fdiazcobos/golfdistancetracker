@@ -6,12 +6,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -31,9 +33,19 @@ import java.util.Locale
 fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
     val stats by viewModel.stats.collectAsState()
     val filters by viewModel.filters.collectAsState()
+    var showResetDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.stats_title)) }) }
+        topBar = { 
+            TopAppBar(
+                title = { Text(stringResource(R.string.stats_title)) },
+                actions = {
+                    IconButton(onClick = { showResetDialog = true }) {
+                        Icon(Icons.Default.DeleteSweep, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                    }
+                }
+            ) 
+        }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
             // Filters
@@ -50,6 +62,26 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
                     }
                 }
             }
+        }
+
+        if (showResetDialog) {
+            AlertDialog(
+                onDismissRequest = { showResetDialog = false },
+                title = { Text(stringResource(R.string.stats_reset)) },
+                text = { Text(stringResource(R.string.stats_reset_confirm)) },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.resetAllStats()
+                            showResetDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) { Text(stringResource(R.string.bag_delete)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showResetDialog = false }) { Text(stringResource(R.string.common_cancel)) }
+                }
+            )
         }
     }
 }
@@ -101,7 +133,7 @@ fun GappingAnalysisSection(stats: List<ClubStats>) {
                     val maxDist = stats.maxOf { it.averageDistance ?: 1.0 }
                     val progress = (stat.averageDistance ?: 0.0) / maxDist
                     
-                    Box(modifier = Modifier.fillMaxWidth(progress.toFloat()).fillMaxHeight().background(MaterialTheme.colorScheme.primary, androidx.compose.foundation.shape.RoundedCornerShape(4.dp)))
+                    Box(modifier = Modifier.fillMaxWidth(progress.toFloat()).fillMaxHeight().background(MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp)))
                     
                     Text(
                         UnitConverter.formatDistance(stat.averageDistance, stat.unit), 
@@ -153,12 +185,29 @@ fun ClubStatsCard(stat: ClubStats) {
                 MetricItem(stringResource(R.string.stats_avg_dev), UnitConverter.formatDistance(stat.avgLatDev, stat.unit))
                 MetricItem(stringResource(R.string.stats_mishits), stat.mishitCount.toString())
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(stringResource(R.string.stats_quality_breakdown), style = MaterialTheme.typography.labelMedium)
+            QualityBar(stat.qualityBreakdown)
             
             Spacer(modifier = Modifier.height(16.dp))
-            
             Text(stringResource(R.string.stats_dispersion), style = MaterialTheme.typography.labelMedium)
             ShotDispersionDiana(stat.shots)
         }
+    }
+}
+
+@Composable
+fun QualityBar(breakdown: com.example.golfdistancetracker.ui.viewmodel.QualityBreakdown) {
+    Row(modifier = Modifier.fillMaxWidth().height(12.dp).clip(RoundedCornerShape(6.dp))) {
+        if (breakdown.misshotPct > 0) Box(modifier = Modifier.weight(breakdown.misshotPct.toFloat()).fillMaxHeight().background(Color.Red))
+        if (breakdown.poorPct > 0) Box(modifier = Modifier.weight(breakdown.poorPct.toFloat()).fillMaxHeight().background(Color.Gray))
+        if (breakdown.goodPct > 0) Box(modifier = Modifier.weight(breakdown.goodPct.toFloat()).fillMaxHeight().background(Color(0xFF1976D2)))
+        if (breakdown.greatPct > 0) Box(modifier = Modifier.weight(breakdown.greatPct.toFloat()).fillMaxHeight().background(Color(0xFF2E7D32)))
+    }
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text("Miss: ${(breakdown.misshotPct*100).toInt()}%", style = MaterialTheme.typography.labelSmall, color = Color.Red)
+        Text("Great: ${(breakdown.greatPct*100).toInt()}%", style = MaterialTheme.typography.labelSmall, color = Color(0xFF2E7D32))
     }
 }
 

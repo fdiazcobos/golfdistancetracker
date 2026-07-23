@@ -66,6 +66,7 @@ dependencies {
 
     // Location
     implementation(libs.play.services.location)
+    implementation(libs.play.services.wearable)
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)

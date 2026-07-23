@@ -17,4 +17,7 @@ interface ShotDao {
 
     @Insert
     suspend fun insertShot(shot: Shot)
+
+    @Query("DELETE FROM shots")
+    suspend fun deleteAllShots()
 }

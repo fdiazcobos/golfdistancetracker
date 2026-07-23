@@ -3,17 +3,21 @@ package com.example.golfdistancetracker.ui.screen
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.example.golfdistancetracker.R
 import com.example.golfdistancetracker.data.entity.Club
 import com.example.golfdistancetracker.ui.viewmodel.GolfBagViewModel
@@ -73,14 +77,24 @@ fun GolfBagScreen(viewModel: GolfBagViewModel = hiltViewModel()) {
 @Composable
 fun EmptyBagView() {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().padding(32.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(Icons.Default.Inventory, contentDescription = null, modifier = Modifier.size(64.dp), tint = Color.LightGray)
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(stringResource(R.string.bag_empty), style = MaterialTheme.typography.titleMedium)
-        Text(stringResource(R.string.bag_empty_hint), style = MaterialTheme.typography.bodySmall)
+        AsyncImage(
+            model = "https://images.unsplash.com/photo-1591491719183-8a994943bc7b?q=80&w=600&auto=format&fit=crop",
+            contentDescription = null,
+            modifier = Modifier.size(200.dp).clip(CircleShape),
+            contentScale = ContentScale.Crop
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Text(stringResource(R.string.bag_empty), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(
+            stringResource(R.string.bag_empty_hint), 
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            color = MaterialTheme.colorScheme.secondary
+        )
     }
 }
 

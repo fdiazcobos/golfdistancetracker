@@ -85,7 +85,7 @@ fun DrivingRangeScreen(viewModel: DrivingRangeViewModel = hiltViewModel()) {
                     FilterChip(
                         selected = uiState.isMishit,
                         onClick = { viewModel.toggleMishit(!uiState.isMishit) },
-                        label = { Text(stringResource(R.string.practice_pifia)) },
+                        label = { Text(stringResource(R.string.practice_misshot)) },
                         colors = FilterChipDefaults.filterChipColors(selectedContainerColor = MaterialTheme.colorScheme.errorContainer)
                     )
                     VerticalDivider(modifier = Modifier.height(32.dp).padding(horizontal = 4.dp))

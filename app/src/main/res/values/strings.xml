@@ -45,7 +45,7 @@
     <string name="practice_select_club">Select Club</string>
     <string name="practice_direction">Direction / Deviation</string>
     <string name="practice_quality">Shot Quality</string>
-    <string name="practice_pifia">PIFIA</string>
+    <string name="practice_misshot">MISSHOT</string>
     <string name="practice_muy_corto">Very Short</string>
     <string name="practice_corto">Short</string>
     <string name="practice_bueno">Good</string>
@@ -79,7 +79,10 @@
 
     <!-- Stats -->
     <string name="stats_title">Performance Analytics</string>
+    <string name="stats_reset">Reset Data</string>
+    <string name="stats_reset_confirm">Are you sure you want to delete all shot history? This cannot be undone.</string>
     <string name="stats_gapping">Bag Gapping Analysis</string>
+    <string name="stats_quality_breakdown">Quality Distribution</string>
     <string name="stats_gap">Gap: %1$s</string>
     <string name="stats_large_gap"> (Large Gap!)</string>
     <string name="stats_avg_dist">Avg Dist</string>
@@ -119,6 +122,14 @@
     <string name="score_empty">No active round. Start one!</string>
     <string name="score_total">Total Strokes: %1$d</string>
     <string name="score_select_course">Select Course</string>
+
+    <!-- Scorecard Labels -->
+    <string name="score_eagle">Eagle</string>
+    <string name="score_birdie">Birdie</string>
+    <string name="score_par_label">Par</string>
+    <string name="score_bogey">Bogey</string>
+    <string name="score_double_bogey">Double Bogey</string>
+    <string name="score_other">Other</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>

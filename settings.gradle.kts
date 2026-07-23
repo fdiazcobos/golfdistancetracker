@@ -24,3 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Golf Distance Tracker"
 include(":app")
+include(":wear")

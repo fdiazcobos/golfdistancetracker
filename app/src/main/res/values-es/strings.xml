@@ -45,7 +45,7 @@
     <string name="practice_select_club">Seleccionar Palo</string>
     <string name="practice_direction">Dirección / Desviación</string>
     <string name="practice_quality">Calidad del Golpe</string>
-    <string name="practice_pifia">PIFIA</string>
+    <string name="practice_misshot">MISSHOT</string>
     <string name="practice_muy_corto">Muy Corto</string>
     <string name="practice_corto">Corto</string>
     <string name="practice_bueno">Bueno</string>
@@ -79,7 +79,10 @@
 
     <!-- Stats -->
     <string name="stats_title">Análisis de Rendimiento</string>
+    <string name="stats_reset">Borrar Datos</string>
+    <string name="stats_reset_confirm">¿Estás seguro de que quieres borrar todo el historial? Esta acción no se puede deshacer.</string>
     <string name="stats_gapping">Análisis de Huecos (Gapping)</string>
+    <string name="stats_quality_breakdown">Distribución de Calidad</string>
     <string name="stats_gap">Hueco: %1$s</string>
     <string name="stats_large_gap"> (¡Hueco Grande!)</string>
     <string name="stats_avg_dist">Dist. Media</string>
@@ -119,6 +122,14 @@
     <string name="score_empty">Sin ronda activa. ¡Inicia una!</string>
     <string name="score_total">Total Golpes: %1$d</string>
     <string name="score_select_course">Seleccionar Cancha</string>
+
+    <!-- Scorecard Labels -->
+    <string name="score_eagle">Eagle</string>
+    <string name="score_birdie">Birdie</string>
+    <string name="score_par_label">Par</string>
+    <string name="score_bogey">Bogey</string>
+    <string name="score_double_bogey">Doble Bogey</string>
+    <string name="score_other">Otro</string>
 
     <!-- Settings -->
     <string name="settings_title">Ajustes</string>

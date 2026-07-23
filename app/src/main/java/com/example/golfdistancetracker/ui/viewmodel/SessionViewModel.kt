@@ -94,7 +94,8 @@ class SessionViewModel @Inject constructor(
 
     private suspend fun fetchWeather(lat: Double, lon: Double) {
         try {
-            val response = weatherService.getWeather(lat, lon, "YOUR_API_KEY")
+            val key = preferenceManager.weatherApiKey.first()
+            val response = weatherService.getWeather(lat, lon, key)
             _uiState.update { it.copy(
                 weather = WeatherInfo(response.main.temp, response.wind.speed, response.wind.deg)
             ) }

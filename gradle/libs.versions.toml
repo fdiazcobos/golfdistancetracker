@@ -13,12 +13,17 @@ hilt = "2.60.1"
 navigation = "2.9.8"
 credentials = "1.6.0"
 playServicesLocation = "21.4.0"
+kotlinx-coroutines-play-services = "1.8.1"
 hiltNavigationCompose = "1.4.0"
 googleid = "1.2.0"
 datastore = "1.2.1"
 retrofit = "3.0.0"
 okhttp = "5.4.0"
 coil = "2.7.0"
+wear-compose = "1.4.2"
+wear-compose-material3 = "1.0.0"
+playServicesWearable = "20.0.1"
+horologist = "0.7.15"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -53,6 +58,13 @@ retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "kotlinx-coroutines-play-services" }
+androidx-wear-compose-material3 = { group = "androidx.wear.compose", name = "compose-material3", version.ref = "wear-compose-material3" }
+androidx-wear-compose-foundation = { group = "androidx.wear.compose", name = "compose-foundation", version.ref = "wear-compose" }
+androidx-wear-compose-navigation = { group = "androidx.wear.compose", name = "compose-navigation", version.ref = "wear-compose" }
+play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "playServicesWearable" }
+horologist-compose-layout = { group = "com.google.android.horologist", name = "horologist-compose-layout", version.ref = "horologist" }
+horologist-compose-material = { group = "com.google.android.horologist", name = "horologist-compose-material", version.ref = "horologist" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
