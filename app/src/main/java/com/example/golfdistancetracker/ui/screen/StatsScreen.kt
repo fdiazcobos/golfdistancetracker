@@ -14,9 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.golfdistancetracker.R
 import com.example.golfdistancetracker.data.entity.Shot
 import com.example.golfdistancetracker.data.entity.ShotType
 import com.example.golfdistancetracker.ui.viewmodel.ClubStats
@@ -31,7 +33,7 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
     val filters by viewModel.filters.collectAsState()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Performance Analytics") }) }
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.stats_title)) }) }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
             // Filters
@@ -52,12 +54,43 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FilterSection(selectedType: ShotType?, onTypeSelect: (ShotType?) -> Unit) {
+    LazyRow(
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        item {
+            FilterChip(
+                selected = selectedType == null,
+                onClick = { onTypeSelect(null) },
+                label = { Text(stringResource(R.string.stats_filter_all)) }
+            )
+        }
+        item {
+            FilterChip(
+                selected = selectedType == ShotType.FIELD,
+                onClick = { onTypeSelect(ShotType.FIELD) },
+                label = { Text(stringResource(R.string.stats_filter_field)) }
+            )
+        }
+        item {
+            FilterChip(
+                selected = selectedType == ShotType.DRIVING_RANGE,
+                onClick = { onTypeSelect(ShotType.DRIVING_RANGE) },
+                label = { Text(stringResource(R.string.stats_filter_practice)) }
+            )
+        }
+    }
+}
+
 @Composable
 fun GappingAnalysisSection(stats: List<ClubStats>) {
     if (stats.size < 2) return
 
     Column(modifier = Modifier.padding(16.dp)) {
-        Text("Bag Gapping Analysis", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.stats_gapping), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
         
         stats.forEach { stat ->
@@ -81,7 +114,6 @@ fun GappingAnalysisSection(stats: List<ClubStats>) {
             
             stat.gapToNext?.let { gap ->
                 val isLargeGap = gap > 15.0
-                val isSmallGap = gap < 5.0
                 
                 Row(modifier = Modifier.padding(start = 80.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -91,48 +123,17 @@ fun GappingAnalysisSection(stats: List<ClubStats>) {
                         tint = if (isLargeGap) Color(0xFFD32F2F) else Color.Gray
                     )
                     Text(
-                        "Gap: ${UnitConverter.formatDistance(gap, stat.unit)}",
+                        stringResource(R.string.stats_gap, UnitConverter.formatDistance(gap, stat.unit)),
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (isLargeGap) Color(0xFFD32F2F) else if (isSmallGap) Color(0xFF1976D2) else Color.Gray,
+                        color = if (isLargeGap) Color(0xFFD32F2F) else Color.Gray,
                         modifier = Modifier.padding(start = 4.dp)
                     )
-                    if (isLargeGap) Text(" (Large Gap!)", color = Color(0xFFD32F2F), style = MaterialTheme.typography.labelSmall)
+                    if (isLargeGap) Text(stringResource(R.string.stats_large_gap), color = Color(0xFFD32F2F), style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
     }
     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun FilterSection(selectedType: ShotType?, onTypeSelect: (ShotType?) -> Unit) {
-    LazyRow(
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        item {
-            FilterChip(
-                selected = selectedType == null,
-                onClick = { onTypeSelect(null) },
-                label = { Text("All") }
-            )
-        }
-        item {
-            FilterChip(
-                selected = selectedType == ShotType.FIELD,
-                onClick = { onTypeSelect(ShotType.FIELD) },
-                label = { Text("Field") }
-            )
-        }
-        item {
-            FilterChip(
-                selected = selectedType == ShotType.DRIVING_RANGE,
-                onClick = { onTypeSelect(ShotType.DRIVING_RANGE) },
-                label = { Text("Practice") }
-            )
-        }
-    }
 }
 
 @Composable
@@ -144,18 +145,18 @@ fun ClubStatsCard(stat: ClubStats) {
             Spacer(modifier = Modifier.height(8.dp))
             
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                MetricItem("Avg Dist", UnitConverter.formatDistance(stat.averageDistance, stat.unit))
-                MetricItem("Accuracy", String.format(Locale.US, "%.0f%%", stat.accuracyPct * 100))
+                MetricItem(stringResource(R.string.stats_avg_dist), UnitConverter.formatDistance(stat.averageDistance, stat.unit))
+                MetricItem(stringResource(R.string.stats_accuracy), String.format(Locale.US, "%.0f%%", stat.accuracyPct * 100))
             }
             
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                MetricItem("Avg Dev", UnitConverter.formatDistance(stat.avgLatDev, stat.unit))
-                MetricItem("Mishits", stat.mishitCount.toString())
+                MetricItem(stringResource(R.string.stats_avg_dev), UnitConverter.formatDistance(stat.avgLatDev, stat.unit))
+                MetricItem(stringResource(R.string.stats_mishits), stat.mishitCount.toString())
             }
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            Text("Shot Dispersion (Diana)", style = MaterialTheme.typography.labelMedium)
+            Text(stringResource(R.string.stats_dispersion), style = MaterialTheme.typography.labelMedium)
             ShotDispersionDiana(stat.shots)
         }
     }
@@ -187,11 +188,8 @@ fun ShotDispersionDiana(shots: List<Shot>) {
             drawLine(color = Color.LightGray, start = Offset(center.x, 0f), end = Offset(center.x, size.height))
 
             shots.forEach { shot ->
-                // For Field shots, use lateralDeviation if available.
-                // For Driving Range, use the -2 to 2 scale.
                 val x = if (shot.shotType == ShotType.FIELD) {
                     val latDev = shot.lateralDeviation ?: 0.0
-                    // Assume 20m is the edge of the chart
                     center.x + (latDev.toFloat() / 20f) * radius
                 } else {
                     val dev = shot.deviation ?: 0f
@@ -199,7 +197,7 @@ fun ShotDispersionDiana(shots: List<Shot>) {
                 }
                 
                 val y = if (shot.shotType == ShotType.FIELD) {
-                    center.y // Just center for field shots on X axis
+                    center.y
                 } else {
                     val qual = shot.quality ?: 1
                     center.y + (1 - qual) * (radius / 2f)

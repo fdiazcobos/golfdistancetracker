@@ -16,10 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.example.golfdistancetracker.R
 import com.example.golfdistancetracker.data.entity.Course
 import com.example.golfdistancetracker.ui.viewmodel.CourseViewModel
 
@@ -34,11 +36,11 @@ fun CourseManagementScreen(viewModel: CourseViewModel = hiltViewModel()) {
     Scaffold(
         topBar = { 
             TopAppBar(
-                title = { Text(selectedCourseForHoles?.name ?: "My Golf Courses") },
+                title = { Text(selectedCourseForHoles?.name ?: stringResource(R.string.course_title)) },
                 navigationIcon = {
                     if (selectedCourseForHoles != null) {
                         IconButton(onClick = { selectedCourseForHoles = null }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                         }
                     }
                 }
@@ -47,7 +49,7 @@ fun CourseManagementScreen(viewModel: CourseViewModel = hiltViewModel()) {
         floatingActionButton = {
             if (selectedCourseForHoles == null) {
                 FloatingActionButton(onClick = { showAddDialog = true }, containerColor = MaterialTheme.colorScheme.primary) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Course")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.course_add))
                 }
             }
         }
@@ -111,9 +113,9 @@ fun EmptyCoursesView() {
             contentScale = ContentScale.Crop
         )
         Spacer(modifier = Modifier.height(24.dp))
-        Text("No courses yet", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.course_empty), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text(
-            "Add the courses where you play to track your performance by hole.",
+            stringResource(R.string.course_empty_hint),
             style = MaterialTheme.typography.bodyMedium,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             color = MaterialTheme.colorScheme.secondary
@@ -133,15 +135,15 @@ fun CourseItem(course: Course, onClick: () -> Unit, onEdit: () -> Unit, onDelete
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.secondary)
                     Spacer(Modifier.width(4.dp))
-                    Text("${course.numberOfHoles} Holes • ${course.location ?: "Unknown"}", style = MaterialTheme.typography.bodyMedium)
+                    Text("${course.numberOfHoles} ${stringResource(R.string.nav_field)} • ${course.location ?: stringResource(R.string.common_unknown)}", style = MaterialTheme.typography.bodyMedium)
                 }
             }
             Row {
                 IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
+                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.bag_edit), tint = MaterialTheme.colorScheme.primary)
                 }
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.bag_delete), tint = MaterialTheme.colorScheme.error)
                 }
             }
         }
@@ -159,10 +161,10 @@ fun HoleList(holes: List<com.example.golfdistancetracker.data.entity.Hole>, onHo
                 onClick = { showDetailDialog = true }
             ) {
                 ListItem(
-                    headlineContent = { Text("Hole ${hole.holeNumber}", fontWeight = FontWeight.Bold) },
+                    headlineContent = { Text(stringResource(R.string.course_hole_title, hole.holeNumber), fontWeight = FontWeight.Bold) },
                     supportingContent = { 
                         Text(
-                            hole.notes ?: "Tap to add strategy notes...", 
+                            hole.notes ?: stringResource(R.string.course_notes_hint), 
                             maxLines = 2,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         ) 
@@ -177,7 +179,7 @@ fun HoleList(holes: List<com.example.golfdistancetracker.data.entity.Hole>, onHo
                     },
                     trailingContent = {
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("Par ${hole.par}", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                            Text("${stringResource(R.string.course_par)} ${hole.par}", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                             Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.LightGray)
                         }
                     }
@@ -206,11 +208,11 @@ fun HoleDetailDialog(hole: com.example.golfdistancetracker.data.entity.Hole, onD
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Hole ${hole.holeNumber} Details", fontWeight = FontWeight.Bold) },
+        title = { Text(stringResource(R.string.course_hole_details, hole.holeNumber), fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                    Text("Par:", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.course_par), fontWeight = FontWeight.Bold)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(onClick = { if(par > 3) par-- }) { Icon(Icons.Default.Remove, null) }
                         Text("$par", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -221,7 +223,7 @@ fun HoleDetailDialog(hole: com.example.golfdistancetracker.data.entity.Hole, onD
                 OutlinedTextField(
                     value = dist,
                     onValueChange = { dist = it },
-                    label = { Text("Typical Distance") },
+                    label = { Text(stringResource(R.string.course_dist_typical)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
                 )
@@ -229,8 +231,8 @@ fun HoleDetailDialog(hole: com.example.golfdistancetracker.data.entity.Hole, onD
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("Strategy Notes") },
-                    placeholder = { Text("e.g. Aim left of the bunker") },
+                    label = { Text(stringResource(R.string.course_notes)) },
+                    placeholder = { Text(stringResource(R.string.course_notes_hint)) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3
                 )
@@ -239,10 +241,10 @@ fun HoleDetailDialog(hole: com.example.golfdistancetracker.data.entity.Hole, onD
         confirmButton = {
             Button(onClick = { 
                 onSave(hole.copy(par = par, notes = notes.ifEmpty { null }, distance = dist.toIntOrNull())) 
-            }) { Text("Save Details") }
+            }) { Text(stringResource(R.string.common_save)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         }
     )
 }
@@ -255,32 +257,32 @@ fun CourseDialog(initialCourse: Course? = null, onDismiss: () -> Unit, onSave: (
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (initialCourse == null) "Add New Course" else "Edit Course Info", fontWeight = FontWeight.Bold) },
+        title = { Text(if (initialCourse == null) stringResource(R.string.course_add) else stringResource(R.string.course_edit), fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Course Name") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = location, onValueChange = { location = it }, label = { Text("Location") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.course_name)) }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = location, onValueChange = { location = it }, label = { Text(stringResource(R.string.course_location)) }, modifier = Modifier.fillMaxWidth())
                 
-                Text("Number of Holes", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.course_holes), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                 Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         RadioButton(selected = holes == 9, onClick = { holes = 9 })
-                        Text("9 Holes")
+                        Text(stringResource(R.string.course_holes_9))
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         RadioButton(selected = holes == 18, onClick = { holes = 18 })
-                        Text("18 Holes")
+                        Text(stringResource(R.string.course_holes_18))
                     }
                 }
             }
         },
         confirmButton = {
             Button(onClick = { onSave(name, location.ifEmpty { null }, holes) }) {
-                Text(if (initialCourse == null) "Create" else "Update")
+                Text(if (initialCourse == null) stringResource(R.string.course_create) else stringResource(R.string.course_update))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         }
     )
 }

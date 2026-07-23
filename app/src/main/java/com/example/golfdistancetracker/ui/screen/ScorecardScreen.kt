@@ -9,9 +9,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.golfdistancetracker.R
 import com.example.golfdistancetracker.data.entity.HoleScore
 import com.example.golfdistancetracker.ui.viewmodel.RoundViewModel
 
@@ -22,11 +24,11 @@ fun ScorecardScreen(viewModel: RoundViewModel = hiltViewModel()) {
     var showCoursePicker by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Scorecard") }) },
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.score_title)) }) },
         floatingActionButton = {
             if (uiState.holeScores.isEmpty()) {
                 FloatingActionButton(onClick = { showCoursePicker = true }) {
-                    Icon(Icons.Default.Add, contentDescription = "New Round")
+                    Icon(Icons.Default.Add, contentDescription = null)
                 }
             }
         }
@@ -34,11 +36,11 @@ fun ScorecardScreen(viewModel: RoundViewModel = hiltViewModel()) {
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
             if (uiState.holeScores.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No active round. Start one!")
+                    Text(stringResource(R.string.score_empty))
                 }
             } else {
                 Text(
-                    "Total Strokes: ${uiState.holeScores.sumOf { it.strokes }}",
+                    stringResource(R.string.score_total, uiState.holeScores.sumOf { it.strokes }),
                     modifier = Modifier.padding(16.dp),
                     style = MaterialTheme.typography.headlineSmall
                 )
@@ -53,7 +55,7 @@ fun ScorecardScreen(viewModel: RoundViewModel = hiltViewModel()) {
         if (showCoursePicker) {
             AlertDialog(
                 onDismissRequest = { showCoursePicker = false },
-                title = { Text("Select Course") },
+                title = { Text(stringResource(R.string.score_select_course)) },
                 text = {
                     Column {
                         uiState.courses.forEach { course ->
@@ -74,13 +76,13 @@ fun ScorecardScreen(viewModel: RoundViewModel = hiltViewModel()) {
 
 @Composable
 fun HoleScoreItem(score: HoleScore, onUpdate: (HoleScore) -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Hole ${score.holeNumber}", fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.course_hole_title, score.holeNumber), fontWeight = FontWeight.Bold)
             
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { if(score.strokes > 0) onUpdate(score.copy(strokes = score.strokes - 1)) }) {

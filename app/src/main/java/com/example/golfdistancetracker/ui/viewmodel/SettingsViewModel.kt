@@ -2,8 +2,7 @@ package com.example.golfdistancetracker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.golfdistancetracker.data.prefs.DistanceUnit
-import com.example.golfdistancetracker.data.prefs.PreferenceManager
+import com.example.golfdistancetracker.data.prefs.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -21,9 +20,27 @@ class SettingsViewModel @Inject constructor(
         DistanceUnit.METERS
     )
 
+    val themePreference = preferenceManager.themePreference.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        ThemePreference.SYSTEM
+    )
+
+    val languagePreference = preferenceManager.languagePreference.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        LanguagePreference.AUTO
+    )
+
     fun updateUnit(unit: DistanceUnit) {
-        viewModelScope.launch {
-            preferenceManager.updateDistanceUnit(unit)
-        }
+        viewModelScope.launch { preferenceManager.updateDistanceUnit(unit) }
+    }
+
+    fun updateTheme(theme: ThemePreference) {
+        viewModelScope.launch { preferenceManager.updateTheme(theme) }
+    }
+
+    fun updateLanguage(lang: LanguagePreference) {
+        viewModelScope.launch { preferenceManager.updateLanguage(lang) }
     }
 }

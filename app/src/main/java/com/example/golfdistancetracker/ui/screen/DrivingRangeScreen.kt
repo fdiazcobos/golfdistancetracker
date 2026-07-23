@@ -8,8 +8,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.golfdistancetracker.R
 import com.example.golfdistancetracker.ui.viewmodel.DrivingRangeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -19,7 +21,7 @@ fun DrivingRangeScreen(viewModel: DrivingRangeViewModel = hiltViewModel()) {
     val clubs by viewModel.clubs.collectAsState()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Driving Range Practice") }) }
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.practice_title)) }) }
     ) { padding ->
         Column(
             modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp),
@@ -27,7 +29,7 @@ fun DrivingRangeScreen(viewModel: DrivingRangeViewModel = hiltViewModel()) {
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             // Club Selector
-            Text("Select Club", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.practice_select_club), style = MaterialTheme.typography.titleMedium)
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(clubs) { club ->
                     FilterChip(
@@ -38,11 +40,17 @@ fun DrivingRangeScreen(viewModel: DrivingRangeViewModel = hiltViewModel()) {
                 }
             }
 
-            Divider()
+            HorizontalDivider()
 
             // Direction
-            Text("Direction / Deviation", style = MaterialTheme.typography.titleMedium)
-            val deviationLabels = listOf("Mucho Izq", "Poco Izq", "Centro", "Poco Der", "Mucho Der")
+            Text(stringResource(R.string.practice_direction), style = MaterialTheme.typography.titleMedium)
+            val deviationLabels = listOf(
+                stringResource(R.string.practice_dev_far_left),
+                stringResource(R.string.practice_dev_left),
+                stringResource(R.string.practice_dev_center),
+                stringResource(R.string.practice_dev_right),
+                stringResource(R.string.practice_dev_far_right)
+            )
             Column {
                 Slider(
                     value = uiState.deviation,
@@ -58,25 +66,34 @@ fun DrivingRangeScreen(viewModel: DrivingRangeViewModel = hiltViewModel()) {
             }
 
             // Quality
-            Text("Shot Quality", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.practice_quality), style = MaterialTheme.typography.titleMedium)
             val isPutter = uiState.selectedClub?.type == "Putter"
             
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                // Mishit button FIRST as requested (Hide if Putter)
                 if (!isPutter) {
                     FilterChip(
                         selected = uiState.isMishit,
                         onClick = { viewModel.toggleMishit(!uiState.isMishit) },
-                        label = { Text("PIFIA") },
+                        label = { Text(stringResource(R.string.practice_pifia)) },
                         colors = FilterChipDefaults.filterChipColors(selectedContainerColor = MaterialTheme.colorScheme.errorContainer)
                     )
                     VerticalDivider(modifier = Modifier.height(32.dp).padding(horizontal = 4.dp))
                 }
                 
                 val qualityOptions = if (isPutter) {
-                    listOf("Muy Corto" to -2, "Corto" to -1, "Bueno" to 0, "Largo" to 1, "Muy Largo" to 2)
+                    listOf(
+                        stringResource(R.string.practice_muy_corto) to -2, 
+                        stringResource(R.string.practice_corto) to -1, 
+                        stringResource(R.string.practice_bueno) to 0, 
+                        stringResource(R.string.practice_largo) to 1, 
+                        stringResource(R.string.practice_muy_largo) to 2
+                    )
                 } else {
-                    listOf("Malo" to 0, "Bien" to 1, "Muy Bien" to 2)
+                    listOf(
+                        stringResource(R.string.practice_malo) to 0, 
+                        stringResource(R.string.practice_bien) to 1, 
+                        stringResource(R.string.practice_muy_bien) to 2
+                    )
                 }
 
                 qualityOptions.forEach { (label, value) ->
@@ -94,7 +111,7 @@ fun DrivingRangeScreen(viewModel: DrivingRangeViewModel = hiltViewModel()) {
             Spacer(modifier = Modifier.weight(1f))
 
             if (uiState.saveSuccess) {
-                Text("Shot Saved!", color = Color(0xFF2E7D32), style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.practice_saved), color = Color(0xFF2E7D32), style = MaterialTheme.typography.bodyLarge)
             }
 
             Button(
@@ -102,7 +119,7 @@ fun DrivingRangeScreen(viewModel: DrivingRangeViewModel = hiltViewModel()) {
                 enabled = uiState.selectedClub != null,
                 modifier = Modifier.fillMaxWidth().height(56.dp)
             ) {
-                Text("Register Shot")
+                Text(stringResource(R.string.practice_register))
             }
         }
     }

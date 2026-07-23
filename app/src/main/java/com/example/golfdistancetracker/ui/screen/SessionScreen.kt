@@ -15,10 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.golfdistancetracker.R
 import com.example.golfdistancetracker.data.entity.Club
 import com.example.golfdistancetracker.ui.viewmodel.SessionViewModel
 import com.example.golfdistancetracker.util.UnitConverter
@@ -33,14 +35,17 @@ fun SessionScreen(viewModel: SessionViewModel = hiltViewModel()) {
     Scaffold(
         topBar = { 
             TopAppBar(
-                title = { Text(uiState.selectedClub?.let { "Tracking: ${it.name}" } ?: "New Session") },
+                title = { 
+                    Text(
+                        uiState.selectedClub?.let { stringResource(R.string.session_tracking, it.name) } 
+                        ?: stringResource(R.string.session_new)
+                    ) 
+                },
                 actions = {
-                    uiState.weather?.let { 
-                        WeatherWidget(it)
-                    }
+                    uiState.weather?.let { WeatherWidget(it) }
                     if (uiState.selectedClub != null) {
                         TextButton(onClick = { viewModel.resetSession() }) {
-                            Text("Change Club")
+                            Text(stringResource(R.string.session_change_club))
                         }
                     }
                 }
@@ -81,7 +86,7 @@ fun ClubSelectionGrid(
     onSelect: (Club) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Select your club:", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.session_select_club), style = MaterialTheme.typography.headlineSmall)
         
         if (uiState.recommendedClub != null) {
             Card(
@@ -92,7 +97,7 @@ fun ClubSelectionGrid(
                     Icon(Icons.Default.TipsAndUpdates, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        "Caddie Recommendation: ${uiState.recommendedClub.name}",
+                        stringResource(R.string.session_caddie_recommendation, uiState.recommendedClub.name),
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -135,20 +140,21 @@ fun TrackingUI(
     ) {
         // Target Input
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            val unitSuffix = if(uiState.distanceUnit == com.example.golfdistancetracker.data.prefs.DistanceUnit.YARDS) "yd" else "m"
             OutlinedTextField(
                 value = targetInput,
                 onValueChange = { 
                     targetInput = it
                     onTargetChange(it.toDoubleOrNull())
                 },
-                label = { Text("Target Distance (${if(uiState.distanceUnit == com.example.golfdistancetracker.data.prefs.DistanceUnit.YARDS) "yd" else "m"})") },
+                label = { Text(stringResource(R.string.session_target_dist, unitSuffix)) },
                 keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
             
             if (uiState.playsLikeDistance != null && uiState.playsLikeDistance != uiState.targetDistanceMeters) {
                 Text(
-                    "Plays Like: ${UnitConverter.formatDistance(uiState.playsLikeDistance, uiState.distanceUnit)}",
+                    stringResource(R.string.session_plays_like, UnitConverter.formatDistance(uiState.playsLikeDistance, uiState.distanceUnit)),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
@@ -188,13 +194,13 @@ fun TrackingUI(
             )
         ) {
             Text(
-                if (uiState.isGpsReady) "GPS Ready" else "Waiting for GPS accuracy...",
+                if (uiState.isGpsReady) stringResource(R.string.session_gps_ready) else stringResource(R.string.session_gps_waiting),
                 modifier = Modifier.padding(8.dp),
                 color = if (uiState.isGpsReady) Color(0xFF2E7D32) else Color(0xFFEF6C00)
             )
         }
 
-        Text("Location: ${uiState.currentPosition?.let { String.format(Locale.US, "%.5f, %.5f", it.latitude, it.longitude) } ?: "..."}")
+        Text(stringResource(R.string.session_location, uiState.currentPosition?.let { String.format(Locale.US, "%.5f, %.5f", it.latitude, it.longitude) } ?: "..."))
 
         if (uiState.startLocation == null) {
             Button(
@@ -202,24 +208,24 @@ fun TrackingUI(
                 enabled = uiState.isGpsReady,
                 modifier = Modifier.fillMaxWidth().height(56.dp)
             ) {
-                Text("Mark Start Point")
+                Text(stringResource(R.string.session_mark_start))
             }
         } else {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Shot in progress...", color = MaterialTheme.colorScheme.primary)
+                Text(stringResource(R.string.session_shot_progress), color = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = onMarkEnd,
                     modifier = Modifier.fillMaxWidth().height(56.dp)
                 ) {
-                    Text("Mark End Point & Save")
+                    Text(stringResource(R.string.session_mark_end))
                 }
             }
         }
 
         uiState.lastShotDistance?.let {
             Text(
-                "Distance: ${UnitConverter.formatDistance(it, uiState.distanceUnit)}",
+                stringResource(R.string.session_distance, UnitConverter.formatDistance(it, uiState.distanceUnit)),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.secondary
             )

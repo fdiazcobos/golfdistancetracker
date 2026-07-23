@@ -16,20 +16,46 @@ enum class DistanceUnit {
     METERS, YARDS
 }
 
+enum class ThemePreference {
+    SYSTEM, LIGHT, DARK
+}
+
+enum class LanguagePreference {
+    AUTO, ENGLISH, SPANISH
+}
+
 @Singleton
 class PreferenceManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     private val UNIT_KEY = stringPreferencesKey("distance_unit")
+    private val THEME_KEY = stringPreferencesKey("theme_preference")
+    private val LANG_KEY = stringPreferencesKey("language_preference")
 
     val distanceUnit: Flow<DistanceUnit> = context.dataStore.data.map { prefs ->
         val unitName = prefs[UNIT_KEY] ?: DistanceUnit.METERS.name
         DistanceUnit.valueOf(unitName)
     }
 
+    val themePreference: Flow<ThemePreference> = context.dataStore.data.map { prefs ->
+        val themeName = prefs[THEME_KEY] ?: ThemePreference.SYSTEM.name
+        ThemePreference.valueOf(themeName)
+    }
+
+    val languagePreference: Flow<LanguagePreference> = context.dataStore.data.map { prefs ->
+        val langName = prefs[LANG_KEY] ?: LanguagePreference.AUTO.name
+        LanguagePreference.valueOf(langName)
+    }
+
     suspend fun updateDistanceUnit(unit: DistanceUnit) {
-        context.dataStore.edit { prefs ->
-            prefs[UNIT_KEY] = unit.name
-        }
+        context.dataStore.edit { prefs -> prefs[UNIT_KEY] = unit.name }
+    }
+
+    suspend fun updateTheme(theme: ThemePreference) {
+        context.dataStore.edit { prefs -> prefs[THEME_KEY] = theme.name }
+    }
+
+    suspend fun updateLanguage(lang: LanguagePreference) {
+        context.dataStore.edit { prefs -> prefs[LANG_KEY] = lang.name }
     }
 }

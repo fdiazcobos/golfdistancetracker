@@ -4,21 +4,24 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.res.stringResource
+import androidx.navigation.compose.*
 import com.example.golfdistancetracker.auth.AuthManager
+import com.example.golfdistancetracker.data.prefs.LanguagePreference
+import com.example.golfdistancetracker.data.prefs.ThemePreference
 import com.example.golfdistancetracker.ui.screen.*
 import com.example.golfdistancetracker.ui.theme.GolfDistanceTrackerTheme
+import com.example.golfdistancetracker.ui.viewmodel.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -31,8 +34,32 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            GolfDistanceTrackerTheme {
-                MainApp(authManager)
+            val settingsViewModel: SettingsViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+            val themePref by settingsViewModel.themePreference.collectAsState()
+            val langPref by settingsViewModel.languagePreference.collectAsState()
+
+            val darkTheme = when (themePref) {
+                ThemePreference.SYSTEM -> isSystemInDarkTheme()
+                ThemePreference.LIGHT -> false
+                ThemePreference.DARK -> true
+            }
+
+            // Apply Language
+            val locale = when (langPref) {
+                LanguagePreference.AUTO -> Locale.getDefault()
+                LanguagePreference.ENGLISH -> Locale.forLanguageTag("en")
+                LanguagePreference.SPANISH -> Locale.forLanguageTag("es")
+            }
+            
+            val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+            configuration.setLocale(locale)
+            
+            CompositionLocalProvider(
+                androidx.compose.ui.platform.LocalContext provides androidx.compose.ui.platform.LocalContext.current.createConfigurationContext(configuration)
+            ) {
+                GolfDistanceTrackerTheme(darkTheme = darkTheme) {
+                    MainApp(authManager)
+                }
             }
         }
     }
@@ -55,32 +82,32 @@ fun MainApp(authManager: AuthManager) {
                         val currentRoute = currentBackStackEntry?.destination?.route
 
                         NavigationBarItem(
-                            icon = { Icon(Icons.Default.Dashboard, contentDescription = "Home") },
-                            label = { Text("Home") },
+                            icon = { Icon(Icons.Default.Dashboard, contentDescription = null) },
+                            label = { Text(stringResource(R.string.nav_home)) },
                             selected = currentRoute == "dashboard",
                             onClick = { navController.navigate("dashboard") }
                         )
                         NavigationBarItem(
-                            icon = { Icon(Icons.Default.Adjust, contentDescription = "Field") },
-                            label = { Text("Field") },
+                            icon = { Icon(Icons.Default.Adjust, contentDescription = null) },
+                            label = { Text(stringResource(R.string.nav_field)) },
                             selected = currentRoute == "session",
                             onClick = { navController.navigate("session") }
                         )
                         NavigationBarItem(
-                            icon = { Icon(Icons.Default.SportsGolf, contentDescription = "Practice") },
-                            label = { Text("Practice") },
+                            icon = { Icon(Icons.Default.SportsGolf, contentDescription = null) },
+                            label = { Text(stringResource(R.string.nav_practice)) },
                             selected = currentRoute == "practice",
                             onClick = { navController.navigate("practice") }
                         )
                         NavigationBarItem(
-                            icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Bag") },
-                            label = { Text("Bag") },
+                            icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
+                            label = { Text(stringResource(R.string.nav_bag)) },
                             selected = currentRoute == "bag",
                             onClick = { navController.navigate("bag") }
                         )
                         NavigationBarItem(
-                            icon = { Icon(Icons.Default.Analytics, contentDescription = "Stats") },
-                            label = { Text("Stats") },
+                            icon = { Icon(Icons.Default.Analytics, contentDescription = null) },
+                            label = { Text(stringResource(R.string.nav_stats)) },
                             selected = currentRoute == "stats",
                             onClick = { navController.navigate("stats") }
                         )

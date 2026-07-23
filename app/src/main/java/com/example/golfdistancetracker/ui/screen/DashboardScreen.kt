@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -14,9 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.golfdistancetracker.R
 import com.example.golfdistancetracker.ui.viewmodel.StatsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -27,10 +30,10 @@ fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit
     Scaffold(
         topBar = { 
             CenterAlignedTopAppBar(
-                title = { Text("GOLF TRACKER", fontWeight = FontWeight.ExtraBold, letterSpacing = androidx.compose.ui.unit.TextUnit.Unspecified) },
+                title = { Text(stringResource(R.string.dash_title), fontWeight = FontWeight.ExtraBold) },
                 actions = {
                     IconButton(onClick = { onNavigate("settings") }) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings") 
+                        Icon(Icons.Default.Settings, contentDescription = null) 
                     }
                 }
             ) 
@@ -49,7 +52,7 @@ fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit
                     Box {
                         AsyncImage(
                             model = "https://images.unsplash.com/photo-1535131749006-b7f58c99034b?q=80&w=1000&auto=format&fit=crop",
-                            contentDescription = "Golf course",
+                            contentDescription = null,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )
@@ -58,13 +61,13 @@ fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit
                             modifier = Modifier.align(Alignment.BottomStart).padding(20.dp)
                         ) {
                             Text(
-                                "Master Your Game",
+                                stringResource(R.string.dash_hero_title),
                                 style = MaterialTheme.typography.headlineMedium,
                                 color = Color.White,
                                 fontWeight = FontWeight.ExtraBold
                             )
                             Text(
-                                "Track every shot, improve every day.",
+                                stringResource(R.string.dash_hero_subtitle),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.White.copy(alpha = 0.8f)
                             )
@@ -74,28 +77,28 @@ fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit
             }
 
             item {
-                Text("Management Hub", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.dash_management), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(8.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     DashboardActionButton(
                         modifier = Modifier.weight(1f),
                         onClick = { onNavigate("courses") },
                         icon = Icons.Default.GolfCourse,
-                        label = "Courses",
+                        label = stringResource(R.string.course_title),
                         color = MaterialTheme.colorScheme.primaryContainer
                     )
                     DashboardActionButton(
                         modifier = Modifier.weight(1f),
                         onClick = { onNavigate("scorecard") },
                         icon = Icons.Default.Description,
-                        label = "Scorecards",
+                        label = stringResource(R.string.score_title),
                         color = MaterialTheme.colorScheme.secondaryContainer
                     )
                 }
             }
 
             item {
-                Text("Quick Stats", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.dash_quick_stats), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(8.dp))
                 
                 val largeGaps = stats.filter { (it.gapToNext ?: 0.0) > 15.0 }
@@ -108,7 +111,7 @@ fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit
                             Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                "Bag Gap Alert: Large gap detected between ${largeGaps.first().club.name} and the next club.",
+                                stringResource(R.string.dash_gap_alert, largeGaps.first().club.name),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onErrorContainer
                             )
@@ -120,7 +123,7 @@ fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit
                     val avgAccuracy = stats.map { it.accuracyPct }.average().takeIf { !it.isNaN() } ?: 0.0
                     DashboardStatCard(
                         modifier = Modifier.weight(1f),
-                        title = "Accuracy",
+                        title = stringResource(R.string.dash_accuracy),
                         value = "${(avgAccuracy * 100).toInt()}%",
                         icon = Icons.Default.GpsFixed,
                         color = MaterialTheme.colorScheme.tertiaryContainer
@@ -128,16 +131,16 @@ fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit
                     val bestClub = stats.maxByOrNull { it.averageDistance ?: 0.0 }
                     DashboardStatCard(
                         modifier = Modifier.weight(1f),
-                        title = "Power",
-                        value = bestClub?.club?.name ?: "N/A",
-                        icon = Icons.Default.Bolt,
+                        title = stringResource(R.string.dash_power),
+                        value = bestClub?.club?.name ?: stringResource(R.string.stats_no_data),
+                        icon = Icons.AutoMirrored.Filled.ShowChart,
                         color = MaterialTheme.colorScheme.surfaceVariant
                     )
                 }
             }
             
             item {
-                Text("Tips & Tricks", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.dash_tips), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(8.dp))
                 ElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -149,8 +152,8 @@ fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Column {
-                            Text("Did you know?", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                            Text("Aiming for the center of the green is safer than chasing pins.", style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(R.string.dash_did_you_know), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.dash_tip_aim), style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }

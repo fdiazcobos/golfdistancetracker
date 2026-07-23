@@ -10,9 +10,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.golfdistancetracker.R
 import com.example.golfdistancetracker.data.entity.Club
 import com.example.golfdistancetracker.ui.viewmodel.GolfBagViewModel
 
@@ -24,10 +26,10 @@ fun GolfBagScreen(viewModel: GolfBagViewModel = hiltViewModel()) {
     var showAddDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("My Golf Bag") }) },
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.bag_title)) }) },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Add Club")
+                Icon(Icons.Default.Add, contentDescription = null)
             }
         }
     ) { padding ->
@@ -77,16 +79,15 @@ fun EmptyBagView() {
     ) {
         Icon(Icons.Default.Inventory, contentDescription = null, modifier = Modifier.size(64.dp), tint = Color.LightGray)
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Your bag is empty", style = MaterialTheme.typography.titleMedium)
-        Text("Add your first club using the + button", style = MaterialTheme.typography.bodySmall)
+        Text(stringResource(R.string.bag_empty), style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.bag_empty_hint), style = MaterialTheme.typography.bodySmall)
     }
 }
 
 @Composable
 fun ClubItem(club: Club, onEdit: () -> Unit, onDelete: () -> Unit) {
-    Card(
+    ElevatedCard(
         modifier = Modifier.fillMaxWidth().padding(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         onClick = onEdit
     ) {
         Row(
@@ -111,17 +112,17 @@ fun ClubItem(club: Club, onEdit: () -> Unit, onDelete: () -> Unit) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(club.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(
-                    "${club.brand ?: "Generic"} • ${club.model ?: "Default"}", 
+                    "${club.brand ?: stringResource(R.string.bag_generic)} • ${club.model ?: stringResource(R.string.bag_default)}", 
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )
             }
             Row {
                 IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
+                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.bag_edit), tint = MaterialTheme.colorScheme.primary)
                 }
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.bag_delete), tint = MaterialTheme.colorScheme.error)
                 }
             }
         }
@@ -156,7 +157,7 @@ fun ClubDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (initialClub == null) "Add New Club" else "Edit Club") },
+        title = { Text(if (initialClub == null) stringResource(R.string.bag_add_club) else stringResource(R.string.bag_edit_club)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 // Type Dropdown
@@ -167,7 +168,7 @@ fun ClubDialog(
                     OutlinedTextField(
                         value = type,
                         onValueChange = {},
-                        label = { Text("Club Type") },
+                        label = { Text(stringResource(R.string.bag_type)) },
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = typeExpanded) },
                         modifier = Modifier.menuAnchor().fillMaxWidth()
@@ -179,7 +180,6 @@ fun ClubDialog(
                                 onClick = {
                                     type = selectionOption
                                     typeExpanded = false
-                                    // Reset number when type changes
                                     val newNumbers = when (type) {
                                         "Iron" -> (3..10).map { it.toString() }
                                         "Hibrido" -> (2..5).map { it.toString() }
@@ -202,7 +202,7 @@ fun ClubDialog(
                         OutlinedTextField(
                             value = number,
                             onValueChange = {},
-                            label = { Text("Number / Loft") },
+                            label = { Text(stringResource(R.string.bag_number)) },
                             readOnly = true,
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = numberExpanded) },
                             modifier = Modifier.menuAnchor().fillMaxWidth()
@@ -229,7 +229,7 @@ fun ClubDialog(
                     OutlinedTextField(
                         value = brand,
                         onValueChange = { brand = it },
-                        label = { Text("Brand") },
+                        label = { Text(stringResource(R.string.bag_brand)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = brandExpanded) },
                         modifier = Modifier.menuAnchor().fillMaxWidth()
                     )
@@ -246,7 +246,12 @@ fun ClubDialog(
                     }
                 }
 
-                OutlinedTextField(value = model, onValueChange = { model = it }, label = { Text("Model (Optional)") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(
+                    value = model, 
+                    onValueChange = { model = it }, 
+                    label = { Text(stringResource(R.string.bag_model)) }, 
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         },
         confirmButton = {
@@ -254,11 +259,11 @@ fun ClubDialog(
                 val name = if (type == "Putter" || type == "Driver") type else "$type $number"
                 onSave(name, type, number.ifEmpty { null }, brand.ifEmpty { null }, model.ifEmpty { null }) 
             }) {
-                Text(if (initialClub == null) "Add" else "Save")
+                Text(if (initialClub == null) stringResource(R.string.common_add) else stringResource(R.string.common_save))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         }
     )
 }
