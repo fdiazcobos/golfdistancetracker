@@ -1,6 +1,7 @@
 package com.example.golfdistancetracker.wear
 
 import android.location.Location
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.golfdistancetracker.wear.data.prefs.WearPreferenceManager
@@ -44,7 +45,8 @@ data class WearUiState(
     val gpsSource: String = "Phone",
     val impactThreshold: Float = 35f,
     val dailyTotal: Int = 0,
-    val clubUsageMap: Map<String, Int> = emptyMap()
+    val clubUsageMap: Map<String, Int> = emptyMap(),
+    val isPhoneAppActive: Boolean = false
 )
 
 @HiltViewModel
@@ -54,17 +56,20 @@ class WearViewModel @Inject constructor(
     private val dataService: WearDataService,
     private val preferenceManager: WearPreferenceManager,
     @ApplicationContext private val context: android.content.Context
-) : ViewModel(), DataClient.OnDataChangedListener {
+) : ViewModel(), DataClient.OnDataChangedListener, CapabilityClient.OnCapabilityChangedListener {
+
+    private val TAG = "WearViewModel"
+    private val dataClient = Wearable.getDataClient(context)
+    private val capabilityClient = Wearable.getCapabilityClient(context)
 
     private val _uiState = MutableStateFlow(WearUiState())
     val uiState = _uiState.asStateFlow()
 
-    private val dataClient = Wearable.getDataClient(context)
-
     init {
         dataClient.addListener(this)
+        capabilityClient.addListener(this, "golf_phone_app")
         
-        // Initial Fetch
+        checkPhoneCapability()
         fetchInitialData()
 
         viewModelScope.launch {
@@ -109,10 +114,28 @@ class WearViewModel @Inject constructor(
         }
     }
 
+    private fun checkPhoneCapability() {
+        viewModelScope.launch {
+            try {
+                val capabilityInfo = capabilityClient.getCapability("golf_phone_app", CapabilityClient.FILTER_REACHABLE).await()
+                _uiState.update { it.copy(isPhoneAppActive = capabilityInfo.nodes.isNotEmpty()) }
+            } catch (e: Exception) {
+                Log.e(TAG, "Capability check failed", e)
+            }
+        }
+    }
+
+    override fun onCapabilityChanged(capabilityInfo: CapabilityInfo) {
+        _uiState.update { it.copy(isPhoneAppActive = capabilityInfo.nodes.isNotEmpty()) }
+        if (capabilityInfo.nodes.isNotEmpty()) {
+            fetchInitialData() // Refresh on reconnect
+        }
+    }
+
     private fun fetchInitialData() {
         viewModelScope.launch {
             try {
-                val dataItems = Wearable.getDataClient(context).dataItems.await()
+                val dataItems = dataClient.dataItems.await()
                 dataItems.forEach { item ->
                     if (item.uri.path == "/daily_stats") {
                         updateStatsFromMap(DataMapItem.fromDataItem(item).dataMap)
@@ -122,7 +145,7 @@ class WearViewModel @Inject constructor(
                 }
                 dataItems.release()
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e(TAG, "Initial fetch failed", e)
             }
         }
     }
@@ -162,6 +185,7 @@ class WearViewModel @Inject constructor(
 
     override fun onCleared() {
         dataClient.removeListener(this)
+        capabilityClient.removeListener(this)
     }
 
     private fun updateWalkingDistance() {
@@ -236,7 +260,6 @@ class WearViewModel @Inject constructor(
                 isPractice = false,
                 direction = direction
             )
-            // Optimistic Update
             _uiState.update { it.copy(
                 screen = WearScreen.SUMMARY, 
                 lastShotDirection = direction,
@@ -255,7 +278,6 @@ class WearViewModel @Inject constructor(
                 isPractice = true,
                 quality = quality
             )
-            // Optimistically update counts
             val newUsage = state.clubUsageMap.toMutableMap()
             newUsage[state.currentClub] = (newUsage[state.currentClub] ?: 0) + 1
             _uiState.update { it.copy(

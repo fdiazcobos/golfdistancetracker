@@ -3,6 +3,8 @@ package com.example.golfdistancetracker.ui.screen
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -55,6 +57,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
 
             // Wear OS Settings
             SettingsGroup(title = "Watch Settings (Galaxy Watch)") {
+                val syncViewModel: com.example.golfdistancetracker.ui.viewmodel.SyncViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+                
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -79,12 +83,19 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                             valueRange = 15f..100f,
                             steps = 17
                         )
-                        Text(
-                            "Lower = more sensitive. Higher = prevents false hits.",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
                     }
+                }
+
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 8.dp))
+                
+                Button(
+                    onClick = { syncViewModel.forceSync() },
+                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                ) {
+                    Icon(Icons.Default.Sync, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Sync Data to Watch Now")
                 }
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 8.dp))

@@ -156,8 +156,8 @@
     <string name="settings_lang_en">English</string>
     <string name="settings_lang_es">Spanish</string>
     <string name="settings_about">About</string>
-    <string name="settings_version">Golf Tracker v0.2.6</string>
-    <string name="settings_build_date">Build: July 24, 2026 - 1:00 PM</string>
+    <string name="settings_version">Golf Tracker v0.2.8</string>
+    <string name="settings_build_date">Build: July 24, 2026 - 2:30 PM</string>
     <string name="settings_device">Built for Samsung S26 Ultra</string>
 
     <!-- General -->

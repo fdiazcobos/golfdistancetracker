@@ -153,7 +153,7 @@ fun PracticeLoadSection(stats: List<ClubStats>) {
                 
                 Spacer(Modifier.height(8.dp))
                 
-                Box(modifier = Modifier.fillMaxWidth().height(48.dp)) {
+                Box(modifier = Modifier.fillMaxWidth().height(52.dp)) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()

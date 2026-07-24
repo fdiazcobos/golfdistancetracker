@@ -13,8 +13,8 @@ android {
         applicationId = "com.example.golfdistancetracker"
         minSdk = 29
         targetSdk = 37
-        versionCode = 6
-        versionName = "0.2.6"
+        versionCode = 7
+        versionName = "0.2.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -67,6 +67,7 @@ dependencies {
     // Location
     implementation(libs.play.services.location)
     implementation(libs.play.services.wearable)
+    implementation(libs.kotlinx.coroutines.play.services)
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)
