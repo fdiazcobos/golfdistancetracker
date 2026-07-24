@@ -165,4 +165,9 @@
     <string name="common_add">Add</string>
     <string name="common_back">Back</string>
     <string name="common_unknown">Unknown</string>
+    <string name="common_grant">Grant Permission</string>
+
+    <!-- Permissions -->
+    <string name="perm_location_title">Location Required</string>
+    <string name="perm_location_desc">To track your shots and distances on the course, we need precise GPS access. Please grant location permissions to continue.</string>
 </resources>

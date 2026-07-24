@@ -5,6 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalContext
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
@@ -22,6 +29,11 @@ import com.example.golfdistancetracker.ui.viewmodel.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
 import javax.inject.Inject
+
+import androidx.activity.result.contract.ActivityResultContracts
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -43,7 +55,75 @@ class MainActivity : ComponentActivity() {
             }
 
             GolfDistanceTrackerTheme(darkTheme = darkTheme) {
-                MainApp(authManager)
+                PermissionGuard {
+                    MainApp(authManager)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PermissionGuard(content: @Composable () -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var hasLocationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        hasLocationPermission = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+    }
+
+    if (hasLocationPermission) {
+        content()
+    } else {
+        Scaffold { padding ->
+            Column(
+                modifier = androidx.compose.ui.Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .padding(24.dp),
+                horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+            ) {
+                androidx.compose.material3.Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = null,
+                    modifier = androidx.compose.ui.Modifier.size(80.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(androidx.compose.ui.Modifier.height(24.dp))
+                Text(
+                    text = stringResource(R.string.perm_location_title),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+                Spacer(androidx.compose.ui.Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.perm_location_desc),
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(androidx.compose.ui.Modifier.height(40.dp))
+                Button(
+                    onClick = {
+                        launcher.launch(
+                            arrayOf(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                        )
+                    },
+                    modifier = androidx.compose.ui.Modifier.fillMaxWidth().height(56.dp)
+                ) {
+                    Text(stringResource(R.string.common_grant))
+                }
             }
         }
     }

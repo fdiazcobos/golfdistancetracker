@@ -33,7 +33,6 @@ class PhoneWearListenerService : WearableListenerService() {
     }
 
     private fun handleShotPayload(payload: String) {
-        // Payload format: CLUB:$clubName|DIST:$distance|TEMPO:$tempo|PRACTICE:$isPractice
         val parts = payload.split("|").associate { 
             val pair = it.split(":")
             pair[0] to pair.getOrNull(1)
@@ -43,17 +42,28 @@ class PhoneWearListenerService : WearableListenerService() {
         val distance = parts["DIST"]?.toDoubleOrNull()
         val tempo = parts["TEMPO"]
         val isPractice = parts["PRACTICE"]?.toBoolean() ?: false
+        val directionStr = parts["DIR"]
+        val qualityVal = parts["QUAL"]?.toIntOrNull()
 
         scope.launch {
             val club = clubDao.getAllClubs().first().find { it.name == clubName }
             if (club != null) {
+                // Convert string direction (Left, Straight, Right) to float deviation
+                val deviation = when(directionStr) {
+                    "Left" -> -1.5f
+                    "Right" -> 1.5f
+                    "Straight" -> 0f
+                    else -> null
+                }
+
                 shotDao.insertShot(
                     Shot(
                         clubId = club.id,
                         shotType = if (isPractice) ShotType.DRIVING_RANGE else ShotType.FIELD,
                         distance = distance,
                         notes = "Tempo: $tempo (Watch)",
-                        quality = 1 // Default to "Bien"
+                        quality = qualityVal ?: 1,
+                        deviation = deviation
                     )
                 )
             }

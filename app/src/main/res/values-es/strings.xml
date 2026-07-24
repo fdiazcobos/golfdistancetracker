@@ -165,4 +165,9 @@
     <string name="common_add">Añadir</string>
     <string name="common_back">Volver</string>
     <string name="common_unknown">Desconocido</string>
+    <string name="common_grant">Dar Permiso</string>
+
+    <!-- Permissions -->
+    <string name="perm_location_title">Ubicación Requerida</string>
+    <string name="perm_location_desc">Para rastrear tus tiros y distancias en el campo, necesitamos acceso al GPS preciso. Por favor, concede los permisos de ubicación para continuar.</string>
 </resources>

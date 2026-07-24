@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">Golf Tracker Wear</string>
+    <string name="common_grant">Grant</string>
+    <string name="perm_title">Permissions Required</string>
+    <string name="perm_desc">We need Location and Body Sensors to track your swing and distances.</string>
 </resources>

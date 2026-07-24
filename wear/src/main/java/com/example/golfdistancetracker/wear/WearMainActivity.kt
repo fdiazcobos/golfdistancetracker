@@ -1,23 +1,30 @@
 package com.example.golfdistancetracker.wear
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.Smartphone
-import androidx.compose.material.icons.filled.Watch
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.wear.compose.material3.*
+import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
+import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -25,7 +32,67 @@ class WearMainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            GolfWearApp()
+            WearPermissionGuard {
+                GolfWearApp()
+            }
+        }
+    }
+}
+
+@Composable
+fun WearPermissionGuard(content: @Composable () -> Unit) {
+    val context = LocalContext.current
+    val requiredPermissions = arrayOf(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.BODY_SENSORS,
+        Manifest.permission.ACTIVITY_RECOGNITION
+    )
+
+    var permissionsGranted by remember {
+        mutableStateOf(
+            requiredPermissions.all { 
+                ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED 
+            }
+        )
+    }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        permissionsGranted = permissions.values.all { it }
+    }
+
+    if (permissionsGranted) {
+        content()
+    } else {
+        AppScaffold {
+            ScreenScaffold {
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.perm_title),
+                        style = MaterialTheme.typography.titleSmall,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.perm_desc),
+                        style = MaterialTheme.typography.labelSmall,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Button(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { launcher.launch(requiredPermissions) }
+                    ) {
+                        Text(stringResource(R.string.common_grant))
+                    }
+                }
+            }
         }
     }
 }
@@ -35,119 +102,216 @@ fun GolfWearApp(viewModel: WearViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
     
     AppScaffold {
-        when {
-            !uiState.isTracking && uiState.lastTempo == null -> {
-                ModeSelectionScreen(
-                    onPlaySelected = { viewModel.setMode(WearMode.PLAY); viewModel.startSession() },
-                    onPracticeSelected = { viewModel.setMode(WearMode.PRACTICE); viewModel.startSession() }
-                )
-            }
-            else -> {
-                TrackingScreen(
-                    uiState = uiState,
-                    onStop = { viewModel.stopSession() }
-                )
-            }
+        when (uiState.screen) {
+            WearScreen.MODE_SELECTION -> ModeSelectionScreen(
+                onModeSelected = { viewModel.selectMode(it) }
+            )
+            WearScreen.CLUB_SELECTION -> ClubSelectionScreen(
+                onClubSelected = { viewModel.selectClub(it) },
+                onBack = { viewModel.resetToStart() }
+            )
+            WearScreen.READY_TO_HIT -> ReadyToHitScreen(
+                uiState = uiState,
+                onManualMark = { viewModel.manualMarkShot() },
+                onBack = { viewModel.resetToStart() }
+            )
+            WearScreen.WALKING -> WalkingScreen(
+                uiState = uiState,
+                onReachedBall = { viewModel.reachedBall() }
+            )
+            WearScreen.DIRECTION_INPUT -> DirectionPickerScreen(
+                onDirectionSelected = { viewModel.selectDirection(it) }
+            )
+            WearScreen.PRACTICE_RATING -> PracticeRatingScreen(
+                onRated = { viewModel.ratePracticeShot(it) }
+            )
+            WearScreen.SUMMARY -> SummaryScreen(
+                uiState = uiState,
+                onDone = { viewModel.resetToStart() }
+            )
         }
     }
 }
 
 @Composable
-fun ModeSelectionScreen(onPlaySelected: () -> Unit, onPracticeSelected: () -> Unit) {
+fun ModeSelectionScreen(onModeSelected: (WearMode) -> Unit) {
     ScreenScaffold {
         Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
+            modifier = Modifier.fillMaxSize().padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Button(
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                onClick = onPlaySelected,
-                colors = ButtonDefaults.buttonColors()
+                modifier = Modifier.fillMaxWidth().height(60.dp),
+                onClick = { onModeSelected(WearMode.PLAY) }
             ) {
-                Text("PLAY ROUND", style = MaterialTheme.typography.labelMedium)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.GolfCourse, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("PLAY")
+                }
             }
-            
             Spacer(Modifier.height(8.dp))
-            
             Button(
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                onClick = onPracticeSelected,
+                modifier = Modifier.fillMaxWidth().height(60.dp),
+                onClick = { onModeSelected(WearMode.PRACTICE) },
                 colors = ButtonDefaults.filledTonalButtonColors()
             ) {
-                Text("PRACTICE", style = MaterialTheme.typography.labelMedium)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.SportsGolf, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("PRACTICE")
+                }
             }
         }
     }
 }
 
 @Composable
-fun TrackingScreen(uiState: WearUiState, onStop: () -> Unit) {
+fun ClubSelectionScreen(onClubSelected: (String) -> Unit, onBack: () -> Unit) {
+    val columnState = rememberTransformingLazyColumnState()
+    val clubs = listOf("Driver", "3 Wood", "4 Iron", "5 Iron", "6 Iron", "7 Iron", "8 Iron", "9 Iron", "PW", "SW", "LW", "Putter")
+
+    ScreenScaffold(scrollState = columnState) { contentPadding ->
+        TransformingLazyColumn(
+            state = columnState,
+            contentPadding = contentPadding,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            item {
+                Text(
+                    "Club",
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+            items(clubs.size) { index ->
+                Button(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 2.dp),
+                    onClick = { onClubSelected(clubs[index]) },
+                    colors = ButtonDefaults.filledTonalButtonColors()
+                ) {
+                    Text(clubs[index])
+                }
+            }
+            item {
+                TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.error)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ReadyToHitScreen(uiState: WearUiState, onManualMark: () -> Unit, onBack: () -> Unit) {
     ScreenScaffold {
         Column(
             modifier = Modifier.fillMaxSize().padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Header
+            Text(uiState.currentClub, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+            
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("READY", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
+                Text("Swing or tap mark", style = MaterialTheme.typography.labelSmall)
+            }
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                IconButton(onClick = onBack) { Icon(Icons.Default.Close, null, tint = Color.Gray) }
+                Button(onClick = onManualMark) { Text("MARK") }
+            }
+            
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(if (uiState.isUsingPhoneGps) Icons.Default.Smartphone else Icons.Default.Watch, null, modifier = Modifier.size(10.dp))
+                Spacer(Modifier.width(4.dp))
+                Text(if (uiState.isUsingPhoneGps) "Phone GPS" else "Watch GPS", fontSize = 8.sp)
+            }
+        }
+    }
+}
+
+@Composable
+fun WalkingScreen(uiState: WearUiState, onReachedBall: () -> Unit) {
+    ScreenScaffold {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("WALKING", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+            
             Text(
-                uiState.currentClub.uppercase(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
+                "${uiState.currentShotDistance?.toInt() ?: 0}m",
+                style = MaterialTheme.typography.displayMedium,
+                fontWeight = FontWeight.Black
             )
-            
-            // Central Info
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                if (uiState.mode == WearMode.PLAY && uiState.currentShotDistance != null) {
-                    Text(
-                        "${uiState.currentShotDistance.toInt()}m",
-                        style = MaterialTheme.typography.displayMedium,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                    Text("WALKING...", style = MaterialTheme.typography.labelSmall)
-                } else {
-                    Text(
-                        uiState.message,
-                        style = MaterialTheme.typography.titleMedium,
-                        textAlign = TextAlign.Center
-                    )
-                }
-                
-                if (uiState.lastTempo != null) {
-                    Spacer(Modifier.height(4.dp))
-                    Text("TEMPO: ${uiState.lastTempo}", style = MaterialTheme.typography.labelMedium, color = Color(0xFF4CAF50))
-                }
+
+            Button(
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                onClick = onReachedBall
+            ) {
+                Text("FOUND BALL", style = MaterialTheme.typography.labelSmall)
             }
-            
-            // Bottom Bar: Stop + GPS Status
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                IconButton(onClick = onStop, modifier = Modifier.size(36.dp)) {
-                    Icon(
-                        imageVector = Icons.Default.Stop,
-                        contentDescription = "Stop",
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
-                
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top = 4.dp)
-                ) {
-                    Icon(
-                        imageVector = if (uiState.isUsingPhoneGps) Icons.Default.Smartphone else Icons.Default.Watch,
-                        contentDescription = null,
-                        modifier = Modifier.size(10.dp),
-                        tint = if (uiState.isUsingPhoneGps) Color(0xFF4CAF50) else Color.LightGray
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        if (uiState.isUsingPhoneGps) "Phone GPS" else "Watch GPS",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontSize = 8.sp
-                    )
-                }
+        }
+    }
+}
+
+@Composable
+fun DirectionPickerScreen(onDirectionSelected: (String) -> Unit) {
+    ScreenScaffold {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("Direction", style = MaterialTheme.typography.labelMedium)
+            Spacer(Modifier.height(8.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                Button(onClick = { onDirectionSelected("Left") }, modifier = Modifier.size(48.dp), colors = ButtonDefaults.filledTonalButtonColors()) { Text("L") }
+                Button(onClick = { onDirectionSelected("Straight") }, modifier = Modifier.size(56.dp)) { Text("C") }
+                Button(onClick = { onDirectionSelected("Right") }, modifier = Modifier.size(48.dp), colors = ButtonDefaults.filledTonalButtonColors()) { Text("R") }
             }
+        }
+    }
+}
+
+@Composable
+fun PracticeRatingScreen(onRated: (Int) -> Unit) {
+    ScreenScaffold {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("Rating", style = MaterialTheme.typography.labelMedium)
+            Spacer(Modifier.height(8.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Button(onClick = { onRated(0) }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) { Text("MISS", fontSize = 10.sp) }
+                Button(onClick = { onRated(1) }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))) { Text("GOOD", fontSize = 10.sp) }
+                Button(onClick = { onRated(2) }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))) { Text("GREAT", fontSize = 10.sp) }
+            }
+        }
+    }
+}
+
+@Composable
+fun SummaryScreen(uiState: WearUiState, onDone: () -> Unit) {
+    ScreenScaffold {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("SHOT SAVED", style = MaterialTheme.typography.titleSmall, color = Color(0xFF4CAF50))
+            Spacer(Modifier.height(8.dp))
+            Text("${uiState.lastShotDistance?.toInt() ?: 0}m", style = MaterialTheme.typography.displaySmall)
+            Text(uiState.lastShotDirection ?: "Center", style = MaterialTheme.typography.labelSmall)
+            
+            Spacer(Modifier.height(12.dp))
+            Button(onClick = onDone) { Text("DONE") }
         }
     }
 }

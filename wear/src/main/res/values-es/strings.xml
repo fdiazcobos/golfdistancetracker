@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Rastreador de Golf</string>
+    <string name="common_grant">Conceder</string>
+    <string name="perm_title">Permisos Requeridos</string>
+    <string name="perm_desc">Necesitamos Ubicación y Sensores para rastrear tu swing y distancias.</string>
+</resources>
