@@ -7,6 +7,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface RoundDao {
+    @Query("SELECT * FROM rounds WHERE id = :id")
+    suspend fun getRoundById(id: Long): Round?
+
     @Query("SELECT * FROM rounds ORDER BY timestamp DESC")
     fun getAllRounds(): Flow<List<Round>>
 

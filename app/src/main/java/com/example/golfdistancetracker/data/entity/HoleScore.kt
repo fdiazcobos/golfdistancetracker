@@ -18,6 +18,7 @@ import androidx.room.PrimaryKey
 data class HoleScore(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val roundId: Long,
+    val playerId: Long, // Link to who made this score
     val holeNumber: Int,
     val strokes: Int = 0,
     val putts: Int = 0,

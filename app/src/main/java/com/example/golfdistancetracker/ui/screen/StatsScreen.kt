@@ -18,23 +18,25 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.golfdistancetracker.R
 import com.example.golfdistancetracker.data.entity.Shot
 import com.example.golfdistancetracker.data.entity.ShotType
 import com.example.golfdistancetracker.ui.viewmodel.ClubStats
+import com.example.golfdistancetracker.ui.viewmodel.CourseAnalytics
 import com.example.golfdistancetracker.ui.viewmodel.StatsViewModel
 import com.example.golfdistancetracker.util.UnitConverter
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 @Composable
 fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
-    val stats by viewModel.stats.collectAsState()
+    val clubStats by viewModel.clubStats.collectAsState()
+    val courseStats by viewModel.courseStats.collectAsState()
     val filters by viewModel.filters.collectAsState()
     var showResetDialog by remember { mutableStateOf(false) }
+    var statsMode by remember { mutableStateOf(0) } // 0: Clubs, 1: Courses
 
     Scaffold(
         topBar = { 
@@ -49,21 +51,36 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            // Filters
-            FilterSection(filters.shotType) { viewModel.updateShotTypeFilter(it) }
-            
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                item {
-                    if (filters.shotType == ShotType.DRIVING_RANGE) {
-                        PracticeLoadSection(stats)
-                    } else {
-                        GappingAnalysisSection(stats)
+            // Stats Mode Switcher
+            TabRow(selectedTabIndex = statsMode) {
+                Tab(selected = statsMode == 0, onClick = { statsMode = 0 }, text = { Text("Clubs") })
+                Tab(selected = statsMode == 1, onClick = { statsMode = 1 }, text = { Text("Courses") })
+            }
+
+            if (statsMode == 0) {
+                // Filters
+                FilterSection(filters.shotType) { viewModel.updateShotTypeFilter(it) }
+                
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    item {
+                        if (filters.shotType == ShotType.DRIVING_RANGE) {
+                            PracticeLoadSection(clubStats)
+                        } else {
+                            GappingAnalysisSection(clubStats)
+                        }
+                    }
+                    
+                    items(clubStats) { stat ->
+                        if (stat.shots.isNotEmpty()) {
+                            ClubStatsCard(stat)
+                        }
                     }
                 }
-                
-                items(stats) { stat ->
-                    if (stat.shots.isNotEmpty()) {
-                        ClubStatsCard(stat)
+            } else {
+                // Course Analytics
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(courseStats) { analytics ->
+                        CourseAnalyticsCard(analytics)
                     }
                 }
             }
@@ -87,6 +104,26 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
                     TextButton(onClick = { showResetDialog = false }) { Text(stringResource(R.string.common_cancel)) }
                 }
             )
+        }
+    }
+}
+
+@Composable
+fun CourseAnalyticsCard(analytics: CourseAnalytics) {
+    Card(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(analytics.course.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(analytics.course.location ?: "Unknown Location", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                MetricItem("Avg Score", String.format(Locale.US, "%.1f", analytics.averageScore ?: 0.0))
+                MetricItem("Best Round", analytics.bestScore?.toString() ?: "-")
+                MetricItem("Rounds", analytics.roundsCount.toString())
+            }
+
+            // More detailed breakdown could go here (e.g. recent rounds list)
         }
     }
 }

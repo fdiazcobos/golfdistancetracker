@@ -2,10 +2,10 @@ package com.example.golfdistancetracker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.golfdistancetracker.data.dao.CourseDao
+import com.example.golfdistancetracker.data.dao.RoundDao
 import com.example.golfdistancetracker.data.dao.ShotDao
-import com.example.golfdistancetracker.data.entity.Club
-import com.example.golfdistancetracker.data.entity.Shot
-import com.example.golfdistancetracker.data.entity.ShotType
+import com.example.golfdistancetracker.data.entity.*
 import com.example.golfdistancetracker.data.prefs.DistanceUnit
 import com.example.golfdistancetracker.data.repository.GolfRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +17,14 @@ data class StatsFilters(
     val selectedClubIds: Set<Long> = emptySet(),
     val shotType: ShotType? = null,
     val startDate: Long? = null
+)
+
+data class CourseAnalytics(
+    val course: Course,
+    val averageScore: Double?,
+    val bestScore: Int?,
+    val roundsCount: Int,
+    val rounds: List<Round>
 )
 
 data class QualityBreakdown(
@@ -41,14 +49,16 @@ data class ClubStats(
 @HiltViewModel
 class StatsViewModel @Inject constructor(
     private val repository: GolfRepository,
-    private val shotDao: ShotDao
+    private val shotDao: ShotDao,
+    private val roundDao: RoundDao,
+    private val courseDao: CourseDao
 ) : ViewModel() {
 
     private val _filters = MutableStateFlow(StatsFilters())
     val filters = _filters.asStateFlow()
 
     @kotlinx.coroutines.ExperimentalCoroutinesApi
-    val stats = combine(
+    val clubStats = combine(
         repository.clubStats,
         _filters
     ) { allStats, filters ->
@@ -94,6 +104,22 @@ class StatsViewModel @Inject constructor(
             } else null
             stat.copy(gapToNext = gap)
         }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val courseStats = combine(
+        courseDao.getAllCourses(),
+        roundDao.getAllRounds()
+    ) { courses, rounds ->
+        courses.map { course ->
+            val courseRounds = rounds.filter { it.courseId == course.id && it.isCompleted }
+            CourseAnalytics(
+                course = course,
+                averageScore = courseRounds.map { it.totalScore }.average().takeIf { !it.isNaN() },
+                bestScore = courseRounds.minOfOrNull { it.totalScore },
+                roundsCount = courseRounds.size,
+                rounds = courseRounds
+            )
+        }.filter { it.roundsCount > 0 }.sortedBy { it.averageScore ?: Double.MAX_VALUE }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun updateShotTypeFilter(type: ShotType?) {

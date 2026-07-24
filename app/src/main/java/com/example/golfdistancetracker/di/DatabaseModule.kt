@@ -17,7 +17,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): GolfDatabase {
         return Room.databaseBuilder(context, GolfDatabase::class.java, "golf_db")
-            .addMigrations(GolfDatabase.MIGRATION_6_7)
+            .addMigrations(GolfDatabase.MIGRATION_6_7, GolfDatabase.MIGRATION_7_8)
             .build()
     }
 
@@ -32,4 +32,7 @@ object DatabaseModule {
 
     @Provides
     fun provideRoundDao(db: GolfDatabase) = db.roundDao()
+
+    @Provides
+    fun providePlayerDao(db: GolfDatabase) = db.playerDao()
 }

@@ -294,7 +294,7 @@ fun WearSettingsScreen(
 
             item {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-                    Text("v0.3.1", style = MaterialTheme.typography.labelSmall)
+                    Text("v0.3.3", style = MaterialTheme.typography.labelSmall)
                     Text(stringResource(R.string.settings_build_date), style = MaterialTheme.typography.labelSmall, color = Color.Gray, textAlign = TextAlign.Center)
                 }
             }

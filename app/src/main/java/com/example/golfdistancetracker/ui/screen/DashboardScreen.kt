@@ -23,10 +23,10 @@ import coil.compose.AsyncImage
 import com.example.golfdistancetracker.R
 import com.example.golfdistancetracker.ui.viewmodel.StatsViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 @Composable
 fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit) {
-    val stats by statsViewModel.stats.collectAsState()
+    val stats by statsViewModel.clubStats.collectAsState()
     
     Scaffold(
         topBar = { 
