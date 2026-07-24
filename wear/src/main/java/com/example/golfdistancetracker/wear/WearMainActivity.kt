@@ -138,6 +138,7 @@ fun GolfWearApp(viewModel: WearViewModel = hiltViewModel()) {
                 WearScreen.SETTINGS -> WearSettingsScreen(
                     uiState = uiState,
                     onUpdateAuto = { viewModel.updateAutoImpact(it) },
+                    onUpdateThreshold = { viewModel.updateImpactThreshold(it) },
                     onUpdateGps = { viewModel.updateGpsSource(it) },
                     onBack = { viewModel.resetToStart() }
                 )
@@ -188,6 +189,7 @@ fun ModeSelectionScreen(onModeSelected: (WearMode) -> Unit, onOpenSettings: () -
 fun WearSettingsScreen(
     uiState: WearUiState,
     onUpdateAuto: (Boolean) -> Unit,
+    onUpdateThreshold: (Float) -> Unit,
     onUpdateGps: (String) -> Unit,
     onBack: () -> Unit
 ) {
@@ -210,6 +212,21 @@ fun WearSettingsScreen(
                     Text(if (uiState.autoImpactEnabled) "Auto Detect: ON" else "Auto Detect: OFF", fontSize = 10.sp)
                 }
             }
+            
+            if (uiState.autoImpactEnabled) {
+                item {
+                    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)) {
+                        Text("Sensitivity: ${uiState.impactThreshold.toInt()}G", style = MaterialTheme.typography.labelSmall, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                        Slider(
+                            value = uiState.impactThreshold,
+                            onValueChange = onUpdateThreshold,
+                            valueRange = 15f..100f,
+                            steps = 8
+                        )
+                    }
+                }
+            }
+
             item {
                 Text("GPS Source", modifier = Modifier.fillMaxWidth().padding(top = 8.dp), textAlign = TextAlign.Center, style = MaterialTheme.typography.labelSmall)
             }

@@ -23,6 +23,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val userHandicap by viewModel.handicap.collectAsState()
     val gpsSource by viewModel.gpsSource.collectAsState()
     val autoImpact by viewModel.autoImpact.collectAsState()
+    val impactThreshold by viewModel.impactThreshold.collectAsState()
 
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.settings_title)) }) }
@@ -65,6 +66,27 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     }
                     Switch(checked = autoImpact, onCheckedChange = { viewModel.updateAutoImpact(it) })
                 }
+                
+                if (autoImpact) {
+                    Column(modifier = Modifier.padding(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Impact Sensitivity", style = MaterialTheme.typography.bodyMedium)
+                            Text("${impactThreshold.toInt()} Gs", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        }
+                        Slider(
+                            value = impactThreshold,
+                            onValueChange = { viewModel.updateImpactThreshold(it) },
+                            valueRange = 15f..100f,
+                            steps = 17
+                        )
+                        Text(
+                            "Lower = more sensitive. Higher = prevents false hits.",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    }
+                }
+
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 8.dp))
                 Text("Location Source", modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                 UnitOption(

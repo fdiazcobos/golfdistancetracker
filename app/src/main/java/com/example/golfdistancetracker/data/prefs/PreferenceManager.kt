@@ -3,6 +3,7 @@ package com.example.golfdistancetracker.data.prefs
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -36,6 +37,7 @@ class PreferenceManager @Inject constructor(
     private val API_KEY = stringPreferencesKey("weather_api_key")
     private val GPS_SOURCE_KEY = stringPreferencesKey("gps_source")
     private val AUTO_IMPACT_KEY = booleanPreferencesKey("auto_impact_detection")
+    private val IMPACT_THRESHOLD_KEY = floatPreferencesKey("impact_threshold")
 
     val handicap: Flow<String> = context.dataStore.data.map { prefs ->
         prefs[HANDICAP_KEY] ?: ""
@@ -47,6 +49,10 @@ class PreferenceManager @Inject constructor(
 
     val autoImpactDetection: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[AUTO_IMPACT_KEY] ?: true
+    }
+
+    val impactThreshold: Flow<Float> = context.dataStore.data.map { prefs ->
+        prefs[IMPACT_THRESHOLD_KEY] ?: 35.0f
     }
 
     val weatherApiKey: Flow<String> = context.dataStore.data.map { prefs ->
@@ -63,6 +69,10 @@ class PreferenceManager @Inject constructor(
 
     suspend fun updateAutoImpact(enabled: Boolean) {
         context.dataStore.edit { prefs -> prefs[AUTO_IMPACT_KEY] = enabled }
+    }
+
+    suspend fun updateImpactThreshold(value: Float) {
+        context.dataStore.edit { prefs -> prefs[IMPACT_THRESHOLD_KEY] = value }
     }
 
     suspend fun updateWeatherApiKey(value: String) {

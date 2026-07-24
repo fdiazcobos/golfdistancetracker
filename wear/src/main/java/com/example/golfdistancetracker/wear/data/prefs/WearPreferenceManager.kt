@@ -3,6 +3,7 @@ package com.example.golfdistancetracker.wear.data.prefs
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -19,6 +20,7 @@ class WearPreferenceManager @Inject constructor(
 ) {
     private val GPS_SOURCE_KEY = stringPreferencesKey("gps_source")
     private val AUTO_IMPACT_KEY = booleanPreferencesKey("auto_impact_detection")
+    private val IMPACT_THRESHOLD_KEY = floatPreferencesKey("impact_threshold")
 
     val gpsSource: Flow<String> = context.dataStore.data.map { prefs ->
         prefs[GPS_SOURCE_KEY] ?: "Phone"
@@ -28,11 +30,19 @@ class WearPreferenceManager @Inject constructor(
         prefs[AUTO_IMPACT_KEY] ?: true
     }
 
+    val impactThreshold: Flow<Float> = context.dataStore.data.map { prefs ->
+        prefs[IMPACT_THRESHOLD_KEY] ?: 35.0f
+    }
+
     suspend fun updateGpsSource(source: String) {
         context.dataStore.edit { prefs -> prefs[GPS_SOURCE_KEY] = source }
     }
 
     suspend fun updateAutoImpact(enabled: Boolean) {
         context.dataStore.edit { prefs -> prefs[AUTO_IMPACT_KEY] = enabled }
+    }
+
+    suspend fun updateImpactThreshold(value: Float) {
+        context.dataStore.edit { prefs -> prefs[IMPACT_THRESHOLD_KEY] = value }
     }
 }

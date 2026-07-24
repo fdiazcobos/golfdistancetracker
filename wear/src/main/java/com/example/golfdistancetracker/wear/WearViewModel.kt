@@ -41,6 +41,7 @@ data class WearUiState(
     val lastShotDirection: String? = null,
     val autoImpactEnabled: Boolean = true,
     val gpsSource: String = "Phone",
+    val impactThreshold: Float = 35f,
     val dailyTotal: Int = 0,
     val clubUsageMap: Map<String, Int> = emptyMap()
 )
@@ -72,9 +73,15 @@ class WearViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 preferenceManager.gpsSource,
-                preferenceManager.autoImpactDetection
-            ) { source, auto ->
-                _uiState.update { it.copy(gpsSource = source, autoImpactEnabled = auto) }
+                preferenceManager.autoImpactDetection,
+                preferenceManager.impactThreshold
+            ) { source, auto, threshold ->
+                swingAnalyzer.updateThreshold(threshold)
+                _uiState.update { it.copy(
+                    gpsSource = source, 
+                    autoImpactEnabled = auto,
+                    impactThreshold = threshold
+                ) }
             }.collect()
         }
 
@@ -99,17 +106,31 @@ class WearViewModel @Inject constructor(
 
     override fun onDataChanged(dataEvents: DataEventBuffer) {
         dataEvents.forEach { event ->
-            if (event.type == DataEvent.TYPE_CHANGED && event.dataItem.uri.path == "/daily_stats") {
-                val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
-                val total = dataMap.getInt("total_today")
-                
-                val usage = mutableMapOf<String, Int>()
-                dataMap.keySet().filter { it.startsWith("usage_") }.forEach { key ->
-                    val clubName = key.removePrefix("usage_")
-                    usage[clubName] = dataMap.getInt(key)
+            if (event.type == DataEvent.TYPE_CHANGED) {
+                when (event.dataItem.uri.path) {
+                    "/daily_stats" -> {
+                        val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
+                        val total = dataMap.getInt("total_today")
+                        val usage = mutableMapOf<String, Int>()
+                        dataMap.keySet().filter { it.startsWith("usage_") }.forEach { key ->
+                            val clubName = key.removePrefix("usage_")
+                            usage[clubName] = dataMap.getInt(key)
+                        }
+                        _uiState.update { it.copy(dailyTotal = total, clubUsageMap = usage) }
+                    }
+                    "/settings" -> {
+                        val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
+                        val threshold = dataMap.getFloat("impact_threshold")
+                        val auto = dataMap.getBoolean("auto_impact")
+                        val gps = dataMap.getString("gps_source") ?: "Phone"
+                        
+                        viewModelScope.launch {
+                            preferenceManager.updateImpactThreshold(threshold)
+                            preferenceManager.updateAutoImpact(auto)
+                            preferenceManager.updateGpsSource(gps)
+                        }
+                    }
                 }
-                
-                _uiState.update { it.copy(dailyTotal = total, clubUsageMap = usage) }
             }
         }
     }
@@ -222,6 +243,10 @@ class WearViewModel @Inject constructor(
 
     fun updateAutoImpact(enabled: Boolean) {
         viewModelScope.launch { preferenceManager.updateAutoImpact(enabled) }
+    }
+
+    fun updateImpactThreshold(value: Float) {
+        viewModelScope.launch { preferenceManager.updateImpactThreshold(value) }
     }
 
     fun updateGpsSource(source: String) {

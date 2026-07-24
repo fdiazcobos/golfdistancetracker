@@ -45,9 +45,12 @@ class SwingAnalyzer(private val context: Context) : SensorEventListener {
     private var isBackswingInProgress = false
     private var isDownswingInProgress = false
 
-    // Detection thresholds
-    private val IMPACT_THRESHOLD = 35f // Lowered to 35 for better sensitivity
-    private val GYRO_BACKSWING_THRESHOLD = 3.0f // rad/s
+    private var currentThreshold = 35f
+    private val GYRO_BACKSWING_THRESHOLD = 3.0f 
+
+    fun updateThreshold(value: Float) {
+        currentThreshold = value
+    }
 
     fun start() {
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST)
@@ -70,7 +73,7 @@ class SwingAnalyzer(private val context: Context) : SensorEventListener {
                      event.values[2] * event.values[2]).toDouble()
                 ).toFloat()
 
-                if (gForce > IMPACT_THRESHOLD && isDownswingInProgress) {
+                if (gForce > currentThreshold && isDownswingInProgress) {
                     val impactTime = System.currentTimeMillis()
                     val backswingDuration = transitionTime - backswingStartTime
                     val downswingDuration = impactTime - transitionTime

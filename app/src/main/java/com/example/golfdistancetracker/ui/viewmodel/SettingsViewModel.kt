@@ -50,6 +50,12 @@ class SettingsViewModel @Inject constructor(
         true
     )
 
+    val impactThreshold = preferenceManager.impactThreshold.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        35f
+    )
+
     fun updateUnit(unit: DistanceUnit) {
         viewModelScope.launch { preferenceManager.updateDistanceUnit(unit) }
     }
@@ -79,5 +85,9 @@ class SettingsViewModel @Inject constructor(
 
     fun updateAutoImpact(enabled: Boolean) {
         viewModelScope.launch { preferenceManager.updateAutoImpact(enabled) }
+    }
+
+    fun updateImpactThreshold(value: Float) {
+        viewModelScope.launch { preferenceManager.updateImpactThreshold(value) }
     }
 }
