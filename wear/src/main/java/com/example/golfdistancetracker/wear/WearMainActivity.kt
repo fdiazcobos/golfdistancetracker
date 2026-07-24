@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -25,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.wear.compose.material3.*
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
@@ -45,25 +48,46 @@ class WearMainActivity : ComponentActivity() {
 @Composable
 fun WearPermissionGuard(content: @Composable () -> Unit) {
     val context = LocalContext.current
-    val requiredPermissions = arrayOf(
+    val lifecycleOwner = LocalLifecycleOwner.current
+    
+    // Critical permissions that BLOCK the app
+    val criticalPermissions = arrayOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
-        Manifest.permission.BODY_SENSORS,
-        Manifest.permission.ACTIVITY_RECOGNITION,
-        Manifest.permission.VIBRATE
+        Manifest.permission.BODY_SENSORS
+    )
+    
+    // Non-critical but requested
+    val extraPermissions = arrayOf(
+        Manifest.permission.ACTIVITY_RECOGNITION
     )
 
     var permissionsGranted by remember {
         mutableStateOf(
-            requiredPermissions.all { 
+            criticalPermissions.all { 
                 ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED 
             }
         )
     }
 
+    // Re-check permissions when coming back to the app
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                permissionsGranted = criticalPermissions.all { 
+                    ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED 
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        permissionsGranted = permissions.values.all { it }
+        permissionsGranted = criticalPermissions.all { permissions[it] == true }
     }
 
     if (permissionsGranted) {
@@ -77,14 +101,21 @@ fun WearPermissionGuard(content: @Composable () -> Unit) {
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "Permissions",
+                        text = "Access Required",
                         style = MaterialTheme.typography.titleSmall,
                         textAlign = TextAlign.Center
                     )
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "Need GPS and Sensors to track your golf swing.",
+                        style = MaterialTheme.typography.labelSmall,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(12.dp))
                     Button(
                         modifier = Modifier.fillMaxWidth(),
-                        onClick = { launcher.launch(requiredPermissions) }
+                        onClick = { launcher.launch(criticalPermissions + extraPermissions) }
                     ) {
                         Text("Grant")
                     }
@@ -146,27 +177,26 @@ fun GolfWearApp(viewModel: WearViewModel = hiltViewModel()) {
 fun ModeSelectionScreen(uiState: WearUiState, onModeSelected: (WearMode) -> Unit, onOpenSettings: () -> Unit) {
     ScreenScaffold(timeText = { TimeText() }) { contentPadding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(contentPadding),
+            modifier = Modifier.fillMaxSize().padding(contentPadding).padding(top = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Connectivity indicator
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .size(6.dp)
-                        .background(if(uiState.isPhoneAppActive) Color.Green else Color.Gray, RoundedCornerShape(3.dp))
+                        .size(8.dp)
+                        .background(if(uiState.isPhoneAppActive) Color.Green else Color.Gray, RoundedCornerShape(4.dp))
                 )
-                Spacer(Modifier.width(4.dp))
+                Spacer(Modifier.width(6.dp))
                 Text(
-                    if(uiState.isPhoneAppActive) "LINKED" else "OFFLINE",
+                    if(uiState.isPhoneAppActive) "CONNECTED" else "OFFLINE",
                     style = MaterialTheme.typography.labelSmall,
-                    fontSize = 7.sp,
+                    fontSize = 8.sp,
                     color = if(uiState.isPhoneAppActive) Color.Green else Color.Gray
                 )
             }
             
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
 
             Button(
                 modifier = Modifier.fillMaxWidth(0.85f).height(52.dp),
@@ -191,7 +221,7 @@ fun ModeSelectionScreen(uiState: WearUiState, onModeSelected: (WearMode) -> Unit
                 }
             }
             
-            IconButton(onClick = onOpenSettings, modifier = Modifier.size(36.dp).padding(top = 4.dp)) {
+            IconButton(onClick = onOpenSettings, modifier = Modifier.size(36.dp)) {
                 Icon(Icons.Default.Settings, null, modifier = Modifier.size(18.dp), tint = Color.Gray)
             }
         }
@@ -214,7 +244,7 @@ fun WearSettingsScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             item {
-                Text("Settings", modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp), textAlign = TextAlign.Center, style = MaterialTheme.typography.labelSmall)
+                Text("Settings", modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp), textAlign = TextAlign.Center, style = MaterialTheme.typography.labelSmall)
             }
             item {
                 Button(
@@ -264,12 +294,12 @@ fun WearSettingsScreen(
 
             item {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-                    Text("v0.3.0", style = MaterialTheme.typography.labelSmall)
+                    Text("v0.3.1", style = MaterialTheme.typography.labelSmall)
                     Text(stringResource(R.string.settings_build_date), style = MaterialTheme.typography.labelSmall, color = Color.Gray, textAlign = TextAlign.Center)
                 }
             }
             item {
-                TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+                TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
                     Text("Done")
                 }
             }
@@ -291,7 +321,7 @@ fun ClubSelectionScreen(uiState: WearUiState, onClubSelected: (String) -> Unit, 
             item {
                 Text(
                     "Select Club",
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 24.dp, bottom = 8.dp),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.labelSmall
                 )
@@ -313,7 +343,7 @@ fun ClubSelectionScreen(uiState: WearUiState, onClubSelected: (String) -> Unit, 
                 }
             }
             item {
-                TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+                TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)) {
                     Text("Cancel", color = MaterialTheme.colorScheme.error)
                 }
             }
@@ -325,10 +355,7 @@ fun ClubSelectionScreen(uiState: WearUiState, onClubSelected: (String) -> Unit, 
 fun ReadyToHitScreen(uiState: WearUiState, onManualMark: () -> Unit, onBack: () -> Unit) {
     ScreenScaffold(timeText = { TimeText() }) { contentPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
-                .padding(top = 12.dp, bottom = 12.dp, start = 14.dp, end = 14.dp),
+            modifier = Modifier.fillMaxSize().padding(contentPadding).padding(top = 8.dp, bottom = 12.dp, start = 12.dp, end = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
@@ -377,16 +404,8 @@ fun ReadyToHitScreen(uiState: WearUiState, onManualMark: () -> Unit, onBack: () 
                 }
                 
                 // Status Bar
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top = 4.dp)
-                ) {
-                    Icon(
-                        if (uiState.isUsingPhoneGps) Icons.Default.Smartphone else Icons.Default.Watch, 
-                        null, 
-                        modifier = Modifier.size(10.dp),
-                        tint = Color.Gray
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+                    Icon(if (uiState.isUsingPhoneGps) Icons.Default.Smartphone else Icons.Default.Watch, null, modifier = Modifier.size(10.dp), tint = Color.Gray)
                     Spacer(Modifier.width(4.dp))
                     Text(if (uiState.isUsingPhoneGps) "Phone GPS" else "Watch GPS", fontSize = 8.sp, color = Color.Gray)
                 }
@@ -399,10 +418,7 @@ fun ReadyToHitScreen(uiState: WearUiState, onManualMark: () -> Unit, onBack: () 
 fun WalkingScreen(uiState: WearUiState, onReachedBall: () -> Unit, onBack: () -> Unit) {
     ScreenScaffold(timeText = { TimeText() }) { contentPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
-                .padding(top = 8.dp, bottom = 12.dp, start = 16.dp, end = 16.dp),
+            modifier = Modifier.fillMaxSize().padding(contentPadding).padding(top = 4.dp, bottom = 12.dp, start = 16.dp, end = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
@@ -436,10 +452,7 @@ fun WalkingScreen(uiState: WearUiState, onReachedBall: () -> Unit, onBack: () ->
 fun DirectionPickerScreen(onDirectionSelected: (String) -> Unit, onBack: () -> Unit) {
     ScreenScaffold(timeText = { TimeText() }) { contentPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
-                .padding(top = 12.dp, bottom = 12.dp),
+            modifier = Modifier.fillMaxSize().padding(contentPadding).padding(top = 12.dp, bottom = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -466,47 +479,41 @@ fun DirectionPickerScreen(onDirectionSelected: (String) -> Unit, onBack: () -> U
 @Composable
 fun PracticeRatingScreen(onRated: (Int) -> Unit) {
     ScreenScaffold(timeText = { TimeText() }) { contentPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding),
-            contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier.fillMaxSize().padding(contentPadding).padding(top = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text("How was it?", style = MaterialTheme.typography.titleSmall)
-                Spacer(Modifier.height(12.dp))
-                Row(
+            Text("How was it?", style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(16.dp))
+            Row(
                 modifier = Modifier.fillMaxWidth(), 
                 horizontalArrangement = Arrangement.Center, 
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Button(
                     onClick = { onRated(0) }, 
-                    modifier = Modifier.size(46.dp), 
+                    modifier = Modifier.size(52.dp), 
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.9f))
                 ) { 
-                    Text("💩", fontSize = 24.sp) 
+                    Text("💩", fontSize = 28.sp) 
                 }
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(10.dp))
                 Button(
                     onClick = { onRated(1) }, 
-                    modifier = Modifier.size(54.dp), 
+                    modifier = Modifier.size(60.dp), 
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
                 ) { 
-                    Text("👍", fontSize = 26.sp) 
+                    Text("👍", fontSize = 30.sp) 
                 }
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(10.dp))
                 Button(
                     onClick = { onRated(2) }, 
-                    modifier = Modifier.size(46.dp), 
+                    modifier = Modifier.size(52.dp), 
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
                 ) { 
-                    Text("🔥", fontSize = 24.sp) 
+                    Text("🔥", fontSize = 28.sp) 
                 }
-            }
             }
         }
     }
