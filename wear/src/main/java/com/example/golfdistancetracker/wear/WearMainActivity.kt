@@ -154,14 +154,14 @@ fun ModeSelectionScreen(uiState: WearUiState, onModeSelected: (WearMode) -> Unit
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .size(8.dp)
-                        .background(if(uiState.isPhoneAppActive) Color.Green else Color.Gray, RoundedCornerShape(4.dp))
+                        .size(6.dp)
+                        .background(if(uiState.isPhoneAppActive) Color.Green else Color.Gray, RoundedCornerShape(3.dp))
                 )
                 Spacer(Modifier.width(4.dp))
                 Text(
-                    if(uiState.isPhoneAppActive) "CONNECTED" else "OFFLINE",
+                    if(uiState.isPhoneAppActive) "LINKED" else "OFFLINE",
                     style = MaterialTheme.typography.labelSmall,
-                    fontSize = 9.sp,
+                    fontSize = 7.sp,
                     color = if(uiState.isPhoneAppActive) Color.Green else Color.Gray
                 )
             }
@@ -169,30 +169,30 @@ fun ModeSelectionScreen(uiState: WearUiState, onModeSelected: (WearMode) -> Unit
             Spacer(Modifier.height(8.dp))
 
             Button(
-                modifier = Modifier.fillMaxWidth(0.8f).height(56.dp),
+                modifier = Modifier.fillMaxWidth(0.85f).height(52.dp),
                 onClick = { onModeSelected(WearMode.PLAY) }
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.GolfCourse, null, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.GolfCourse, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text("PLAY")
                 }
             }
             Spacer(Modifier.height(8.dp))
             Button(
-                modifier = Modifier.fillMaxWidth(0.8f).height(56.dp),
+                modifier = Modifier.fillMaxWidth(0.85f).height(52.dp),
                 onClick = { onModeSelected(WearMode.PRACTICE) },
                 colors = ButtonDefaults.filledTonalButtonColors()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.SportsGolf, null, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.SportsGolf, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text("PRACTICE")
                 }
             }
             
             IconButton(onClick = onOpenSettings, modifier = Modifier.size(36.dp).padding(top = 4.dp)) {
-                Icon(Icons.Default.Settings, null, modifier = Modifier.size(20.dp), tint = Color.Gray)
+                Icon(Icons.Default.Settings, null, modifier = Modifier.size(18.dp), tint = Color.Gray)
             }
         }
     }
@@ -264,7 +264,7 @@ fun WearSettingsScreen(
 
             item {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-                    Text("v0.2.9", style = MaterialTheme.typography.labelSmall)
+                    Text("v0.3.0", style = MaterialTheme.typography.labelSmall)
                     Text(stringResource(R.string.settings_build_date), style = MaterialTheme.typography.labelSmall, color = Color.Gray, textAlign = TextAlign.Center)
                 }
             }
@@ -453,11 +453,11 @@ fun DirectionPickerScreen(onDirectionSelected: (String) -> Unit, onBack: () -> U
             }
             Spacer(Modifier.height(16.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                Button(onClick = { onDirectionSelected("Left") }, modifier = Modifier.size(56.dp), colors = ButtonDefaults.filledTonalButtonColors()) { Text("⬅️", fontSize = 24.sp) }
+                Button(onClick = { onDirectionSelected("Left") }, modifier = Modifier.size(52.dp), colors = ButtonDefaults.filledTonalButtonColors()) { Text("⬅️", fontSize = 24.sp) }
                 Spacer(Modifier.width(8.dp))
-                Button(onClick = { onDirectionSelected("Straight") }, modifier = Modifier.size(64.dp)) { Text("🎯", fontSize = 28.sp) }
+                Button(onClick = { onDirectionSelected("Straight") }, modifier = Modifier.size(60.dp)) { Text("🎯", fontSize = 28.sp) }
                 Spacer(Modifier.width(8.dp))
-                Button(onClick = { onDirectionSelected("Right") }, modifier = Modifier.size(56.dp), colors = ButtonDefaults.filledTonalButtonColors()) { Text("➡️", fontSize = 24.sp) }
+                Button(onClick = { onDirectionSelected("Right") }, modifier = Modifier.size(52.dp), colors = ButtonDefaults.filledTonalButtonColors()) { Text("➡️", fontSize = 24.sp) }
             }
         }
     }
@@ -477,36 +477,36 @@ fun PracticeRatingScreen(onRated: (Int) -> Unit) {
                 verticalArrangement = Arrangement.Center
             ) {
                 Text("How was it?", style = MaterialTheme.typography.titleSmall)
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(12.dp))
                 Row(
-                    modifier = Modifier.fillMaxWidth(), 
-                    horizontalArrangement = Arrangement.Center, 
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Button(
-                        onClick = { onRated(0) }, 
-                        modifier = Modifier.size(60.dp), 
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.9f))
-                    ) { 
-                        Text("💩", fontSize = 32.sp) 
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Button(
-                        onClick = { onRated(1) }, 
-                        modifier = Modifier.size(70.dp), 
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
-                    ) { 
-                        Text("👍", fontSize = 32.sp) 
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Button(
-                        onClick = { onRated(2) }, 
-                        modifier = Modifier.size(60.dp), 
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
-                    ) { 
-                        Text("🔥", fontSize = 32.sp) 
-                    }
+                modifier = Modifier.fillMaxWidth(), 
+                horizontalArrangement = Arrangement.Center, 
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = { onRated(0) }, 
+                    modifier = Modifier.size(46.dp), 
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.9f))
+                ) { 
+                    Text("💩", fontSize = 24.sp) 
                 }
+                Spacer(Modifier.width(8.dp))
+                Button(
+                    onClick = { onRated(1) }, 
+                    modifier = Modifier.size(54.dp), 
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
+                ) { 
+                    Text("👍", fontSize = 26.sp) 
+                }
+                Spacer(Modifier.width(8.dp))
+                Button(
+                    onClick = { onRated(2) }, 
+                    modifier = Modifier.size(46.dp), 
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
+                ) { 
+                    Text("🔥", fontSize = 24.sp) 
+                }
+            }
             }
         }
     }

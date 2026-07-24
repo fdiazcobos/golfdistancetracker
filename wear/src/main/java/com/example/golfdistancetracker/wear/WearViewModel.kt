@@ -235,6 +235,7 @@ class WearViewModel @Inject constructor(
         if (state.mode == WearMode.PRACTICE) {
             _uiState.update { it.copy(screen = WearScreen.PRACTICE_RATING) }
         } else {
+            // Immediate UI transition
             _uiState.update { it.copy(screen = WearScreen.WALKING, currentShotDistance = 0.0) }
             viewModelScope.launch {
                 val impactLoc = locationHelper.getCurrentLocation()
@@ -260,6 +261,7 @@ class WearViewModel @Inject constructor(
                 isPractice = false,
                 direction = direction
             )
+            // Optimistic Update
             _uiState.update { it.copy(
                 screen = WearScreen.SUMMARY, 
                 lastShotDirection = direction,
@@ -278,6 +280,7 @@ class WearViewModel @Inject constructor(
                 isPractice = true,
                 quality = quality
             )
+            // Optimistically update counts
             val newUsage = state.clubUsageMap.toMutableMap()
             newUsage[state.currentClub] = (newUsage[state.currentClub] ?: 0) + 1
             _uiState.update { it.copy(
