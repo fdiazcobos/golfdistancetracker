@@ -28,10 +28,16 @@ enum class WearScreen {
     SETTINGS
 }
 
+data class SyncedClub(
+    val id: Long,
+    val name: String,
+    val type: String
+)
+
 data class WearUiState(
     val screen: WearScreen = WearScreen.MODE_SELECTION,
     val mode: WearMode = WearMode.PLAY,
-    val currentClub: String = "7 Iron",
+    val currentClub: SyncedClub? = null,
     val isTracking: Boolean = false,
     val lastTempo: String? = null,
     val currentShotDistance: Double? = null,
@@ -46,7 +52,9 @@ data class WearUiState(
     val impactThreshold: Float = 35f,
     val dailyTotal: Int = 0,
     val clubUsageMap: Map<String, Int> = emptyMap(),
-    val isPhoneAppActive: Boolean = false
+    val isPhoneAppActive: Boolean = false,
+    val syncedClubs: List<SyncedClub> = emptyList(),
+    val isSyncingShot: Boolean = false
 )
 
 @HiltViewModel
@@ -56,17 +64,19 @@ class WearViewModel @Inject constructor(
     private val dataService: WearDataService,
     private val preferenceManager: WearPreferenceManager,
     @ApplicationContext private val context: android.content.Context
-) : ViewModel(), DataClient.OnDataChangedListener, CapabilityClient.OnCapabilityChangedListener {
+) : ViewModel(), DataClient.OnDataChangedListener, CapabilityClient.OnCapabilityChangedListener, MessageClient.OnMessageReceivedListener {
 
     private val TAG = "WearViewModel"
     private val dataClient = Wearable.getDataClient(context)
     private val capabilityClient = Wearable.getCapabilityClient(context)
+    private val messageClient = Wearable.getMessageClient(context)
 
     private val _uiState = MutableStateFlow(WearUiState())
     val uiState = _uiState.asStateFlow()
 
     init {
         dataClient.addListener(this)
+        messageClient.addListener(this)
         capabilityClient.addListener(this, "golf_phone_app")
         
         checkPhoneCapability()
@@ -103,7 +113,8 @@ class WearViewModel @Inject constructor(
                 
                 _uiState.update { it.copy(
                     currentLocation = loc,
-                    isUsingPhoneGps = isConnected && _uiState.value.gpsSource == "Phone"
+                    isUsingPhoneGps = isConnected && _uiState.value.gpsSource == "Phone",
+                    isPhoneAppActive = isConnected
                 ) }
                 
                 if (_uiState.value.screen == WearScreen.WALKING) {
@@ -128,7 +139,7 @@ class WearViewModel @Inject constructor(
     override fun onCapabilityChanged(capabilityInfo: CapabilityInfo) {
         _uiState.update { it.copy(isPhoneAppActive = capabilityInfo.nodes.isNotEmpty()) }
         if (capabilityInfo.nodes.isNotEmpty()) {
-            fetchInitialData() // Refresh on reconnect
+            fetchInitialData() 
         }
     }
 
@@ -137,10 +148,10 @@ class WearViewModel @Inject constructor(
             try {
                 val dataItems = dataClient.dataItems.await()
                 dataItems.forEach { item ->
-                    if (item.uri.path == "/daily_stats") {
-                        updateStatsFromMap(DataMapItem.fromDataItem(item).dataMap)
-                    } else if (item.uri.path == "/settings") {
-                        updateSettingsFromMap(DataMapItem.fromDataItem(item).dataMap)
+                    when (item.uri.path) {
+                        "/daily_stats" -> updateStatsFromMap(DataMapItem.fromDataItem(item).dataMap)
+                        "/settings" -> updateSettingsFromMap(DataMapItem.fromDataItem(item).dataMap)
+                        "/bag_sync" -> updateBagFromMap(DataMapItem.fromDataItem(item).dataMap)
                     }
                 }
                 dataItems.release()
@@ -156,9 +167,30 @@ class WearViewModel @Inject constructor(
                 when (event.dataItem.uri.path) {
                     "/daily_stats" -> updateStatsFromMap(DataMapItem.fromDataItem(event.dataItem).dataMap)
                     "/settings" -> updateSettingsFromMap(DataMapItem.fromDataItem(event.dataItem).dataMap)
+                    "/bag_sync" -> updateBagFromMap(DataMapItem.fromDataItem(event.dataItem).dataMap)
                 }
             }
         }
+    }
+
+    override fun onMessageReceived(messageEvent: MessageEvent) {
+        if (messageEvent.path == "/shot_saved_ack") {
+            Log.d(TAG, "Shot ACK received from phone")
+            _uiState.update { it.copy(isSyncingShot = false, message = "Saved!") }
+        }
+    }
+
+    private fun updateBagFromMap(dataMap: DataMap) {
+        val count = dataMap.getInt("club_count")
+        val clubs = mutableListOf<SyncedClub>()
+        for (i in 0 until count) {
+            clubs.add(SyncedClub(
+                id = dataMap.getLong("club_id_$i"),
+                name = dataMap.getString("club_name_$i") ?: "Unknown",
+                type = dataMap.getString("club_type_$i") ?: "Iron"
+            ))
+        }
+        _uiState.update { it.copy(syncedClubs = clubs) }
     }
 
     private fun updateStatsFromMap(dataMap: DataMap) {
@@ -186,6 +218,7 @@ class WearViewModel @Inject constructor(
     override fun onCleared() {
         dataClient.removeListener(this)
         capabilityClient.removeListener(this)
+        messageClient.removeListener(this)
     }
 
     private fun updateWalkingDistance() {
@@ -224,7 +257,7 @@ class WearViewModel @Inject constructor(
         _uiState.update { it.copy(mode = mode, screen = WearScreen.CLUB_SELECTION) }
     }
 
-    fun selectClub(club: String) {
+    fun selectClub(club: SyncedClub) {
         _uiState.update { it.copy(currentClub = club, screen = WearScreen.READY_TO_HIT) }
         swingAnalyzer.start()
         _uiState.update { it.copy(isTracking = true) }
@@ -235,7 +268,6 @@ class WearViewModel @Inject constructor(
         if (state.mode == WearMode.PRACTICE) {
             _uiState.update { it.copy(screen = WearScreen.PRACTICE_RATING) }
         } else {
-            // Immediate UI transition
             _uiState.update { it.copy(screen = WearScreen.WALKING, currentShotDistance = 0.0) }
             viewModelScope.launch {
                 val impactLoc = locationHelper.getCurrentLocation()
@@ -253,15 +285,17 @@ class WearViewModel @Inject constructor(
 
     fun selectDirection(direction: String) {
         val state = _uiState.value
+        val club = state.currentClub ?: return
         viewModelScope.launch {
+            _uiState.update { it.copy(isSyncingShot = true) }
             dataService.sendShotToPhone(
-                clubName = state.currentClub,
+                clubId = club.id,
+                clubName = club.name,
                 distance = state.lastShotDistance,
                 tempo = state.lastTempo,
                 isPractice = false,
                 direction = direction
             )
-            // Optimistic Update
             _uiState.update { it.copy(
                 screen = WearScreen.SUMMARY, 
                 lastShotDirection = direction,
@@ -272,9 +306,12 @@ class WearViewModel @Inject constructor(
 
     fun ratePracticeShot(quality: Int) {
         val state = _uiState.value
+        val club = state.currentClub ?: return
         viewModelScope.launch {
+            _uiState.update { it.copy(isSyncingShot = true) }
             dataService.sendShotToPhone(
-                clubName = state.currentClub,
+                clubId = club.id,
+                clubName = club.name,
                 distance = null,
                 tempo = state.lastTempo,
                 isPractice = true,
@@ -282,7 +319,7 @@ class WearViewModel @Inject constructor(
             )
             // Optimistically update counts
             val newUsage = state.clubUsageMap.toMutableMap()
-            newUsage[state.currentClub] = (newUsage[state.currentClub] ?: 0) + 1
+            newUsage[club.name] = (newUsage[club.name] ?: 0) + 1
             _uiState.update { it.copy(
                 screen = WearScreen.READY_TO_HIT, 
                 dailyTotal = it.dailyTotal + 1,
@@ -309,6 +346,6 @@ class WearViewModel @Inject constructor(
 
     fun resetToStart() {
         swingAnalyzer.stop()
-        _uiState.update { it.copy(screen = WearScreen.MODE_SELECTION, isTracking = false) }
+        _uiState.update { it.copy(screen = WearScreen.MODE_SELECTION, isTracking = false, currentClub = null) }
     }
 }

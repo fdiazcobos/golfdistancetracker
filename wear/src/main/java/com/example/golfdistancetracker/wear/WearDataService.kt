@@ -14,6 +14,7 @@ class WearDataService @Inject constructor(
     private val nodeClient = Wearable.getNodeClient(context)
 
     suspend fun sendShotToPhone(
+        clubId: Long,
         clubName: String,
         distance: Double?,
         tempo: String?,
@@ -23,7 +24,8 @@ class WearDataService @Inject constructor(
     ) {
         val nodes = nodeClient.connectedNodes.await()
         val payload = buildString {
-            append("CLUB:$clubName|")
+            append("CLUB_ID:$clubId|")
+            append("CLUB_NAME:$clubName|")
             append("DIST:${distance ?: "null"}|")
             append("TEMPO:${tempo ?: "null"}|")
             append("PRACTICE:$isPractice|")

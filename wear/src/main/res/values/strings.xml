@@ -3,5 +3,5 @@
     <string name="common_grant">Grant</string>
     <string name="perm_title">Permissions Required</string>
     <string name="perm_desc">We need Location and Body Sensors to track your swing and distances.</string>
-    <string name="settings_build_date">Build: July 24, 2026 - 4:25 PM</string>
+    <string name="settings_build_date">Build: July 24, 2026 - 4:40 PM</string>
 </resources>

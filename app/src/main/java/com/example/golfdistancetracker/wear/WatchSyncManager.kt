@@ -55,6 +55,14 @@ class WatchSyncManager @Inject constructor(
             }
         }
 
+        // Sync Bag automatically on change
+        scope.launch {
+            clubDao.getAllClubs().collectLatest { clubs ->
+                Log.d(TAG, "Bag changed, pushing to watch")
+                pushBag(clubs)
+            }
+        }
+
         // Sync settings
         scope.launch {
             combine(
@@ -77,6 +85,27 @@ class WatchSyncManager @Inject constructor(
         scope.launch {
             val shots = shotDao.getAllShots().first()
             pushStats(shots)
+            val clubs = clubDao.getAllClubs().first()
+            pushBag(clubs)
+        }
+    }
+
+    private suspend fun pushBag(clubs: List<com.example.golfdistancetracker.data.entity.Club>) {
+        val request = PutDataMapRequest.create("/bag_sync").apply {
+            dataMap.putInt("club_count", clubs.size)
+            clubs.forEachIndexed { index, club ->
+                dataMap.putLong("club_id_$index", club.id)
+                dataMap.putString("club_name_$index", club.name)
+                dataMap.putString("club_type_$index", club.type)
+            }
+            dataMap.putLong("timestamp", System.currentTimeMillis())
+        }.asPutDataRequest().setUrgent()
+        
+        try {
+            dataClient.putDataItem(request).await()
+            Log.d(TAG, "Bag pushed successfully: ${clubs.size} clubs")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to push bag", e)
         }
     }
 
