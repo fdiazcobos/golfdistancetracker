@@ -128,31 +128,39 @@ fun PracticeLoadSection(stats: List<ClubStats>) {
 
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Practice Volume & Consistency", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
         
         practiceStats.forEach { stat ->
             val totalBalls = stat.shots.size
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 8.dp)) {
-                Column(modifier = Modifier.width(100.dp)) {
-                    Text(stat.club.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text("$totalBalls balls today", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+            Column(modifier = Modifier.padding(vertical = 12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        stat.club.name, 
+                        style = MaterialTheme.typography.titleMedium, 
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        "$totalBalls balls", 
+                        style = MaterialTheme.typography.labelMedium, 
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
                 
-                Box(modifier = Modifier.weight(1f).height(40.dp)) {
-                    val maxBalls = practiceStats.maxOf { it.shots.size }.toDouble()
-                    val progress = totalBalls / maxBalls
-                    
+                Spacer(Modifier.height(8.dp))
+                
+                Box(modifier = Modifier.fillMaxWidth().height(48.dp)) {
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(progress.toFloat())
-                            .fillMaxHeight()
+                            .fillMaxSize()
                             .background(
-                                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f), 
+                                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f), 
                                 RoundedCornerShape(8.dp)
                             )
                     )
                     
-                    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 4.dp), verticalArrangement = Arrangement.Center) {
+                    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp), verticalArrangement = Arrangement.Center) {
                         QualityBar(stat.qualityBreakdown)
                     }
                 }

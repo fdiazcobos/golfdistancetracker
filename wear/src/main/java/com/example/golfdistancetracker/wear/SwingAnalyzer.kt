@@ -5,6 +5,9 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
@@ -21,10 +24,18 @@ enum class EventType {
     IMPACT
 }
 
-class SwingAnalyzer(context: Context) : SensorEventListener {
+class SwingAnalyzer(private val context: Context) : SensorEventListener {
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
     private val gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+
+    private val vibrator = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+        val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+        vibratorManager.defaultVibrator
+    } else {
+        @Suppress("DEPRECATION")
+        context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    }
 
     private val _events = MutableSharedFlow<SwingEvent>()
     val events = _events.asSharedFlow()
@@ -35,7 +46,7 @@ class SwingAnalyzer(context: Context) : SensorEventListener {
     private var isDownswingInProgress = false
 
     // Detection thresholds
-    private val IMPACT_THRESHOLD = 50f // Linear acceleration m/s^2
+    private val IMPACT_THRESHOLD = 35f // Lowered to 35 for better sensitivity
     private val GYRO_BACKSWING_THRESHOLD = 3.0f // rad/s
 
     fun start() {
@@ -45,6 +56,7 @@ class SwingAnalyzer(context: Context) : SensorEventListener {
 
     fun stop() {
         sensorManager.unregisterListener(this)
+        reset()
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
@@ -65,20 +77,21 @@ class SwingAnalyzer(context: Context) : SensorEventListener {
                     
                     val ratio = if (downswingDuration > 0) backswingDuration.toDouble() / downswingDuration else 0.0
                     
+                    vibrateImpact()
                     _events.tryEmit(SwingEvent(EventType.IMPACT, impactTime, ratio, gForce))
                     reset()
                 }
             }
             Sensor.TYPE_GYROSCOPE -> {
-                val angularVel = event.values[2] // Z axis usually for wrist rotation in golf
+                val angularVel = event.values[2] 
 
                 if (!isBackswingInProgress && Math.abs(angularVel) > GYRO_BACKSWING_THRESHOLD) {
                     backswingStartTime = System.currentTimeMillis()
                     isBackswingInProgress = true
+                    vibrateStart()
                     _events.tryEmit(SwingEvent(EventType.BACKSWING_START, backswingStartTime))
                 } else if (isBackswingInProgress && !isDownswingInProgress) {
-                    // Detect direction change at the top
-                    if (angularVel * -1 > GYRO_BACKSWING_THRESHOLD) { // Reverse direction
+                    if (angularVel * -1 > GYRO_BACKSWING_THRESHOLD) { 
                         transitionTime = System.currentTimeMillis()
                         isDownswingInProgress = true
                         _events.tryEmit(SwingEvent(EventType.TOP_OF_SWING, transitionTime))
@@ -86,6 +99,14 @@ class SwingAnalyzer(context: Context) : SensorEventListener {
                 }
             }
         }
+    }
+
+    private fun vibrateStart() {
+        vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+    }
+
+    private fun vibrateImpact() {
+        vibrator.vibrate(VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE))
     }
 
     private fun reset() {

@@ -115,7 +115,6 @@ class WearViewModel @Inject constructor(
     }
 
     override fun onCleared() {
-        super.onCleared()
         dataClient.removeListener(this)
     }
 
@@ -131,7 +130,7 @@ class WearViewModel @Inject constructor(
     private fun handleSwingEvent(event: SwingEvent) {
         if (event.type == EventType.IMPACT) {
             viewModelScope.launch {
-                val impactLoc = locationHelper.getCurrentLocation()
+                val impactLoc = if (_uiState.value.mode == WearMode.PLAY) locationHelper.getCurrentLocation() else null
                 val tempoText = String.format("%.1f:1", event.tempoRatio ?: 0.0)
                 
                 if (_uiState.value.mode == WearMode.PLAY) {
@@ -166,13 +165,11 @@ class WearViewModel @Inject constructor(
         if (state.mode == WearMode.PRACTICE) {
             _uiState.update { it.copy(screen = WearScreen.PRACTICE_RATING) }
         } else {
+            // Immediate UI transition
+            _uiState.update { it.copy(screen = WearScreen.WALKING, currentShotDistance = 0.0) }
             viewModelScope.launch {
                 val impactLoc = locationHelper.getCurrentLocation()
-                _uiState.update { it.copy(
-                    screen = WearScreen.WALKING,
-                    startLocation = impactLoc,
-                    currentShotDistance = 0.0
-                ) }
+                _uiState.update { it.copy(startLocation = impactLoc) }
             }
         }
     }
@@ -208,7 +205,14 @@ class WearViewModel @Inject constructor(
                 isPractice = true,
                 quality = quality
             )
-            _uiState.update { it.copy(screen = WearScreen.READY_TO_HIT) }
+            // Optimistically update counts
+            val newUsage = state.clubUsageMap.toMutableMap()
+            newUsage[state.currentClub] = (newUsage[state.currentClub] ?: 0) + 1
+            _uiState.update { it.copy(
+                screen = WearScreen.READY_TO_HIT, 
+                dailyTotal = it.dailyTotal + 1,
+                clubUsageMap = newUsage
+            ) }
         }
     }
 
