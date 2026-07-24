@@ -50,14 +50,14 @@ fun WearPermissionGuard(content: @Composable () -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     
-    // Critical permissions that BLOCK the app
+    // ONLY Location is critical for blocking. 
+    // Body Sensors is NOT needed for swing (it's for heart rate)
     val criticalPermissions = arrayOf(
-        Manifest.permission.ACCESS_FINE_LOCATION,
-        Manifest.permission.BODY_SENSORS
+        Manifest.permission.ACCESS_FINE_LOCATION
     )
     
-    // Non-critical but requested
     val extraPermissions = arrayOf(
+        Manifest.permission.BODY_SENSORS,
         Manifest.permission.ACTIVITY_RECOGNITION
     )
 
@@ -480,7 +480,7 @@ fun DirectionPickerScreen(onDirectionSelected: (String) -> Unit, onBack: () -> U
 fun PracticeRatingScreen(onRated: (Int) -> Unit) {
     ScreenScaffold(timeText = { TimeText() }) { contentPadding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(contentPadding).padding(top = 12.dp),
+            modifier = Modifier.fillMaxSize().padding(contentPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -491,28 +491,29 @@ fun PracticeRatingScreen(onRated: (Int) -> Unit) {
                 horizontalArrangement = Arrangement.Center, 
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Total width: 46+8+54+8+46 = 162dp (Fits perfectly in 198dp circle)
                 Button(
                     onClick = { onRated(0) }, 
-                    modifier = Modifier.size(52.dp), 
+                    modifier = Modifier.size(46.dp), 
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.9f))
                 ) { 
-                    Text("💩", fontSize = 28.sp) 
+                    Text("💩", fontSize = 24.sp) 
                 }
-                Spacer(Modifier.width(10.dp))
+                Spacer(Modifier.width(8.dp))
                 Button(
                     onClick = { onRated(1) }, 
-                    modifier = Modifier.size(60.dp), 
+                    modifier = Modifier.size(54.dp), 
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
                 ) { 
-                    Text("👍", fontSize = 30.sp) 
+                    Text("👍", fontSize = 28.sp) 
                 }
-                Spacer(Modifier.width(10.dp))
+                Spacer(Modifier.width(8.dp))
                 Button(
                     onClick = { onRated(2) }, 
-                    modifier = Modifier.size(52.dp), 
+                    modifier = Modifier.size(46.dp), 
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
                 ) { 
-                    Text("🔥", fontSize = 28.sp) 
+                    Text("🔥", fontSize = 24.sp) 
                 }
             }
         }
