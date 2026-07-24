@@ -21,6 +21,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val currentUnit by viewModel.distanceUnit.collectAsState()
     val currentTheme by viewModel.themePreference.collectAsState()
     val userHandicap by viewModel.handicap.collectAsState()
+    val gpsSource by viewModel.gpsSource.collectAsState()
+    val autoImpact by viewModel.autoImpact.collectAsState()
 
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.settings_title)) }) }
@@ -47,6 +49,33 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     isError = userHandicap.isNotEmpty() && (userHandicap.toDoubleOrNull() ?: -1.0) !in 0.0..54.0,
                     modifier = Modifier.fillMaxWidth().padding(8.dp),
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+                )
+            }
+
+            // Wear OS Settings
+            SettingsGroup(title = "Watch Settings (Galaxy Watch)") {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text("Auto Shot Detection", style = MaterialTheme.typography.bodyLarge)
+                        Text("Watch detects swings automatically", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+                    }
+                    Switch(checked = autoImpact, onCheckedChange = { viewModel.updateAutoImpact(it) })
+                }
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 8.dp))
+                Text("Location Source", modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                UnitOption(
+                    label = "Phone GPS (Best Battery)",
+                    selected = gpsSource == "Phone",
+                    onClick = { viewModel.updateGpsSource("Phone") }
+                )
+                UnitOption(
+                    label = "Watch GPS (Standalone)",
+                    selected = gpsSource == "Watch",
+                    onClick = { viewModel.updateGpsSource("Watch") }
                 )
             }
 
@@ -88,6 +117,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.settings_about), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(stringResource(R.string.settings_version), style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.settings_build_date), style = MaterialTheme.typography.labelSmall)
                 Text(stringResource(R.string.settings_device), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
             }
         }

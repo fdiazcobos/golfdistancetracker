@@ -6,10 +6,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Air
-import androidx.compose.material.icons.filled.TipsAndUpdates
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,13 +37,31 @@ fun SessionScreen(viewModel: SessionViewModel = hiltViewModel()) {
         topBar = { 
             TopAppBar(
                 title = { 
+                    val selectedClub = uiState.selectedClub
                     Text(
-                        uiState.selectedClub?.let { stringResource(R.string.session_tracking, it.name) } 
+                        selectedClub?.let { stringResource(R.string.session_tracking, it.name) } 
                         ?: stringResource(R.string.session_new)
                     ) 
                 },
                 actions = {
                     uiState.weather?.let { WeatherWidget(it) }
+                    Column(
+                        horizontalAlignment = Alignment.End, 
+                        modifier = Modifier.padding(end = 12.dp)
+                    ) {
+                        Text(
+                            stringResource(R.string.common_total_today), 
+                            style = MaterialTheme.typography.labelSmall, 
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "${uiState.dailyTotalShots}", 
+                            style = MaterialTheme.typography.titleLarge, 
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                     if (uiState.selectedClub != null) {
                         TextButton(onClick = { viewModel.resetSession() }) {
                             Text(stringResource(R.string.session_change_club))
@@ -55,8 +72,15 @@ fun SessionScreen(viewModel: SessionViewModel = hiltViewModel()) {
         }
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-            if (uiState.selectedClub == null) {
+            val currentClub = uiState.selectedClub
+            if (currentClub == null) {
                 ClubSelectionGrid(clubs, uiState) { viewModel.selectClub(it) }
+            } else if (currentClub.type == "Putter") {
+                PutterManualEntryUI(
+                    uiState = uiState,
+                    onSave = { dist, dev, qual -> viewModel.saveManualShot(dist, dev, qual) },
+                    onCancel = { viewModel.resetSession() }
+                )
             } else {
                 TrackingUI(
                     uiState = uiState,
@@ -168,7 +192,7 @@ fun TrackingUI(
                     onTargetChange(it.toDoubleOrNull())
                 },
                 label = { Text(stringResource(R.string.session_target_dist, unitSuffix)) },
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
             
@@ -249,6 +273,66 @@ fun TrackingUI(
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.secondary
             )
+        }
+    }
+}
+
+@Composable
+fun PutterManualEntryUI(
+    uiState: com.example.golfdistancetracker.ui.viewmodel.SessionUiState,
+    onSave: (Double, Double, Int) -> Unit,
+    onCancel: () -> Unit
+) {
+    var dist by remember { mutableStateOf("") }
+    var dev by remember { mutableStateOf(0f) }
+    var qual by remember { mutableIntStateOf(1) }
+
+    Column(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Putter Result", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        
+        OutlinedTextField(
+            value = dist,
+            onValueChange = { dist = it },
+            label = { Text("Distance (${if(uiState.distanceUnit == com.example.golfdistancetracker.data.prefs.DistanceUnit.YARDS) "yd" else "m"})") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Column {
+            Text("Lateral Deviation: ${dev.toInt()}m", style = MaterialTheme.typography.titleMedium)
+            Slider(value = dev, onValueChange = { dev = it }, valueRange = -10f..10f, steps = 19)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Left", style = MaterialTheme.typography.labelSmall)
+                Text("Center", style = MaterialTheme.typography.labelSmall)
+                Text("Right", style = MaterialTheme.typography.labelSmall)
+            }
+        }
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("Quality", style = MaterialTheme.typography.titleMedium)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("Short", "Good", "Long").forEachIndexed { index, label ->
+                    Button(
+                        onClick = { qual = index },
+                        colors = if (qual == index) ButtonDefaults.buttonColors() else ButtonDefaults.filledTonalButtonColors()
+                    ) { Text(label) }
+                }
+            }
+        }
+
+        Spacer(Modifier.weight(1f))
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) { Text("Cancel") }
+            Button(
+                onClick = { onSave(dist.toDoubleOrNull() ?: 0.0, dev.toDouble(), qual) },
+                modifier = Modifier.weight(1f),
+                enabled = dist.isNotEmpty()
+            ) { Text("Save Putter") }
         }
     }
 }

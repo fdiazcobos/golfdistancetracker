@@ -43,7 +43,8 @@ data class SessionUiState(
     val targetDistanceMeters: Double? = null,
     val playsLikeDistance: Double? = null,
     val recommendedClub: Club? = null,
-    val clubUsage: Map<Long, Int> = emptyMap()
+    val clubUsage: Map<Long, Int> = emptyMap(),
+    val dailyTotalShots: Int = 0
 )
 
 @HiltViewModel
@@ -76,7 +77,10 @@ class SessionViewModel @Inject constructor(
                     .filter { it.timestamp >= startOfDay && it.shotType == ShotType.FIELD }
                     .groupBy { it.clubId }
                     .mapValues { it.value.size }
-                _uiState.update { it.copy(clubUsage = usage) }
+                
+                val total = shots.count { it.timestamp >= startOfDay && it.shotType == ShotType.FIELD }
+                
+                _uiState.update { it.copy(clubUsage = usage, dailyTotalShots = total) }
             }
         }
         viewModelScope.launch {
@@ -152,6 +156,28 @@ class SessionViewModel @Inject constructor(
 
     fun closeSummary() {
         _uiState.update { it.copy(showShotSummary = false) }
+    }
+
+    fun saveManualShot(distance: Double, latDev: Double, quality: Int) {
+        val club = _uiState.value.selectedClub ?: return
+        viewModelScope.launch {
+            shotDao.insertShot(
+                Shot(
+                    clubId = club.id,
+                    shotType = ShotType.FIELD,
+                    distance = distance,
+                    lateralDeviation = latDev,
+                    quality = quality,
+                    notes = "Manual entry"
+                )
+            )
+            _uiState.update { it.copy(
+                lastShotDistance = distance,
+                lastShotLatDev = latDev,
+                showShotSummary = true,
+                selectedClub = null // Reset selection for next shot
+            ) }
+        }
     }
 
     fun markStart() {

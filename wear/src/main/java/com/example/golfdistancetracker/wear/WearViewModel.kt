@@ -3,7 +3,10 @@ package com.example.golfdistancetracker.wear
 import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.golfdistancetracker.wear.data.prefs.WearPreferenceManager
+import com.google.android.gms.wearable.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,7 +22,8 @@ enum class WearScreen {
     WALKING,
     DIRECTION_INPUT,
     PRACTICE_RATING,
-    SUMMARY
+    SUMMARY,
+    SETTINGS
 }
 
 data class WearUiState(
@@ -34,24 +38,44 @@ data class WearUiState(
     val currentLocation: Location? = null,
     val startLocation: Location? = null,
     val isUsingPhoneGps: Boolean = false,
-    val lastShotDirection: String? = null
+    val lastShotDirection: String? = null,
+    val autoImpactEnabled: Boolean = true,
+    val gpsSource: String = "Phone",
+    val dailyTotal: Int = 0,
+    val clubUsageMap: Map<String, Int> = emptyMap()
 )
 
 @HiltViewModel
 class WearViewModel @Inject constructor(
     private val swingAnalyzer: SwingAnalyzer,
     private val locationHelper: LocationHelper,
-    private val dataService: WearDataService
-) : ViewModel() {
+    private val dataService: WearDataService,
+    private val preferenceManager: WearPreferenceManager,
+    @ApplicationContext private val context: android.content.Context
+) : ViewModel(), DataClient.OnDataChangedListener {
 
     private val _uiState = MutableStateFlow(WearUiState())
     val uiState = _uiState.asStateFlow()
 
+    private val dataClient = Wearable.getDataClient(context)
+
     init {
+        dataClient.addListener(this)
         viewModelScope.launch {
             swingAnalyzer.events.collect { event ->
-                handleSwingEvent(event)
+                if (_uiState.value.autoImpactEnabled) {
+                    handleSwingEvent(event)
+                }
             }
+        }
+
+        viewModelScope.launch {
+            combine(
+                preferenceManager.gpsSource,
+                preferenceManager.autoImpactDetection
+            ) { source, auto ->
+                _uiState.update { it.copy(gpsSource = source, autoImpactEnabled = auto) }
+            }.collect()
         }
 
         // Periodic status updates
@@ -62,7 +86,7 @@ class WearViewModel @Inject constructor(
                 
                 _uiState.update { it.copy(
                     currentLocation = loc,
-                    isUsingPhoneGps = isConnected
+                    isUsingPhoneGps = isConnected && _uiState.value.gpsSource == "Phone"
                 ) }
                 
                 if (_uiState.value.screen == WearScreen.WALKING) {
@@ -71,6 +95,28 @@ class WearViewModel @Inject constructor(
                 kotlinx.coroutines.delay(2000)
             }
         }
+    }
+
+    override fun onDataChanged(dataEvents: DataEventBuffer) {
+        dataEvents.forEach { event ->
+            if (event.type == DataEvent.TYPE_CHANGED && event.dataItem.uri.path == "/daily_stats") {
+                val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
+                val total = dataMap.getInt("total_today")
+                
+                val usage = mutableMapOf<String, Int>()
+                dataMap.keySet().filter { it.startsWith("usage_") }.forEach { key ->
+                    val clubName = key.removePrefix("usage_")
+                    usage[clubName] = dataMap.getInt(key)
+                }
+                
+                _uiState.update { it.copy(dailyTotal = total, clubUsageMap = usage) }
+            }
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        dataClient.removeListener(this)
     }
 
     private fun updateWalkingDistance() {
@@ -116,9 +162,12 @@ class WearViewModel @Inject constructor(
     }
 
     fun manualMarkShot() {
-        viewModelScope.launch {
-            val impactLoc = locationHelper.getCurrentLocation()
-            if (_uiState.value.mode == WearMode.PLAY) {
+        val state = _uiState.value
+        if (state.mode == WearMode.PRACTICE) {
+            _uiState.update { it.copy(screen = WearScreen.PRACTICE_RATING) }
+        } else {
+            viewModelScope.launch {
+                val impactLoc = locationHelper.getCurrentLocation()
                 _uiState.update { it.copy(
                     screen = WearScreen.WALKING,
                     startLocation = impactLoc,
@@ -161,6 +210,18 @@ class WearViewModel @Inject constructor(
             )
             _uiState.update { it.copy(screen = WearScreen.READY_TO_HIT) }
         }
+    }
+
+    fun openSettings() {
+        _uiState.update { it.copy(screen = WearScreen.SETTINGS) }
+    }
+
+    fun updateAutoImpact(enabled: Boolean) {
+        viewModelScope.launch { preferenceManager.updateAutoImpact(enabled) }
+    }
+
+    fun updateGpsSource(source: String) {
+        viewModelScope.launch { preferenceManager.updateGpsSource(source) }
     }
 
     fun resetToStart() {

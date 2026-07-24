@@ -35,14 +35,20 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 
+import com.example.golfdistancetracker.wear.WatchSyncManager
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var authManager: AuthManager
 
+    @Inject
+    lateinit var watchSyncManager: WatchSyncManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        watchSyncManager.startSync()
         enableEdgeToEdge()
         setContent {
             val settingsViewModel: SettingsViewModel = androidx.hilt.navigation.compose.hiltViewModel()

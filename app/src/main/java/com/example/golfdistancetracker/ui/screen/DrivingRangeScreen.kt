@@ -26,16 +26,20 @@ fun DrivingRangeScreen(viewModel: DrivingRangeViewModel = hiltViewModel()) {
             TopAppBar(
                 title = { Text(stringResource(R.string.practice_title)) },
                 actions = {
-                    Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(end = 16.dp)) {
+                    Column(
+                        horizontalAlignment = Alignment.End, 
+                        modifier = Modifier.padding(end = 12.dp)
+                    ) {
                         Text(
-                            "Total Today", 
+                            stringResource(R.string.common_total_today), 
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.secondary
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
                         )
                         Text(
                             "${uiState.dailyTotalShots}", 
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Black,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }

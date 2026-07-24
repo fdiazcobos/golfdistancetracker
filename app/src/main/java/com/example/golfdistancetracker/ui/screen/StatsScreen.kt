@@ -53,7 +53,11 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
             
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 item {
-                    GappingAnalysisSection(stats)
+                    if (filters.shotType == ShotType.DRIVING_RANGE) {
+                        PracticeLoadSection(stats)
+                    } else {
+                        GappingAnalysisSection(stats)
+                    }
                 }
                 
                 items(stats) { stat ->
@@ -115,6 +119,47 @@ fun FilterSection(selectedType: ShotType?, onTypeSelect: (ShotType?) -> Unit) {
             )
         }
     }
+}
+
+@Composable
+fun PracticeLoadSection(stats: List<ClubStats>) {
+    val practiceStats = stats.filter { it.shots.isNotEmpty() }
+    if (practiceStats.isEmpty()) return
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Practice Volume & Consistency", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(16.dp))
+        
+        practiceStats.forEach { stat ->
+            val totalBalls = stat.shots.size
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 8.dp)) {
+                Column(modifier = Modifier.width(100.dp)) {
+                    Text(stat.club.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("$totalBalls balls today", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+                }
+                
+                Box(modifier = Modifier.weight(1f).height(40.dp)) {
+                    val maxBalls = practiceStats.maxOf { it.shots.size }.toDouble()
+                    val progress = totalBalls / maxBalls
+                    
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(progress.toFloat())
+                            .fillMaxHeight()
+                            .background(
+                                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f), 
+                                RoundedCornerShape(8.dp)
+                            )
+                    )
+                    
+                    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 4.dp), verticalArrangement = Arrangement.Center) {
+                        QualityBar(stat.qualityBreakdown)
+                    }
+                }
+            }
+        }
+    }
+    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 }
 
 @Composable

@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.play.services.wearable)
     implementation(libs.play.services.location)
     implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.androidx.datastore.preferences)
     implementation(libs.horologist.compose.layout)
     implementation(libs.horologist.compose.material)
 

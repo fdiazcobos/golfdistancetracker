@@ -1,6 +1,7 @@
 package com.example.golfdistancetracker.data.prefs
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -33,9 +34,19 @@ class PreferenceManager @Inject constructor(
     private val LANG_KEY = stringPreferencesKey("language_preference")
     private val HANDICAP_KEY = stringPreferencesKey("handicap_profile")
     private val API_KEY = stringPreferencesKey("weather_api_key")
+    private val GPS_SOURCE_KEY = stringPreferencesKey("gps_source")
+    private val AUTO_IMPACT_KEY = booleanPreferencesKey("auto_impact_detection")
 
     val handicap: Flow<String> = context.dataStore.data.map { prefs ->
         prefs[HANDICAP_KEY] ?: ""
+    }
+
+    val gpsSource: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[GPS_SOURCE_KEY] ?: "Phone" // "Phone" or "Watch"
+    }
+
+    val autoImpactDetection: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[AUTO_IMPACT_KEY] ?: true
     }
 
     val weatherApiKey: Flow<String> = context.dataStore.data.map { prefs ->
@@ -44,6 +55,14 @@ class PreferenceManager @Inject constructor(
 
     suspend fun updateHandicap(value: String) {
         context.dataStore.edit { prefs -> prefs[HANDICAP_KEY] = value }
+    }
+
+    suspend fun updateGpsSource(source: String) {
+        context.dataStore.edit { prefs -> prefs[GPS_SOURCE_KEY] = source }
+    }
+
+    suspend fun updateAutoImpact(enabled: Boolean) {
+        context.dataStore.edit { prefs -> prefs[AUTO_IMPACT_KEY] = enabled }
     }
 
     suspend fun updateWeatherApiKey(value: String) {

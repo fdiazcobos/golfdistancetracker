@@ -38,6 +38,18 @@ class SettingsViewModel @Inject constructor(
         ""
     )
 
+    val gpsSource = preferenceManager.gpsSource.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        "Phone"
+    )
+
+    val autoImpact = preferenceManager.autoImpactDetection.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        true
+    )
+
     fun updateUnit(unit: DistanceUnit) {
         viewModelScope.launch { preferenceManager.updateDistanceUnit(unit) }
     }
@@ -59,5 +71,13 @@ class SettingsViewModel @Inject constructor(
         } else if (value.isEmpty()) {
             viewModelScope.launch { preferenceManager.updateHandicap("") }
         }
+    }
+
+    fun updateGpsSource(source: String) {
+        viewModelScope.launch { preferenceManager.updateGpsSource(source) }
+    }
+
+    fun updateAutoImpact(enabled: Boolean) {
+        viewModelScope.launch { preferenceManager.updateAutoImpact(enabled) }
     }
 }

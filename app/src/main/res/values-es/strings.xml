@@ -156,7 +156,8 @@
     <string name="settings_lang_en">Inglés</string>
     <string name="settings_lang_es">Español</string>
     <string name="settings_about">Acerca de</string>
-    <string name="settings_version">Rastreador de Golf v1.0</string>
+    <string name="settings_version">Rastreador de Golf v0.2</string>
+    <string name="settings_build_date">Compilación: 24 de Julio, 2026</string>
     <string name="settings_device">Diseñado para Samsung S26 Ultra</string>
 
     <!-- General -->
@@ -166,6 +167,7 @@
     <string name="common_back">Volver</string>
     <string name="common_unknown">Desconocido</string>
     <string name="common_grant">Dar Permiso</string>
+    <string name="common_total_today">Total Hoy</string>
 
     <!-- Permissions -->
     <string name="perm_location_title">Ubicación Requerida</string>
