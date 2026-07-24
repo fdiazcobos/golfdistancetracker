@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.golfdistancetracker.R
@@ -25,11 +26,19 @@ fun DrivingRangeScreen(viewModel: DrivingRangeViewModel = hiltViewModel()) {
             TopAppBar(
                 title = { Text(stringResource(R.string.practice_title)) },
                 actions = {
-                    Text(
-                        "Shots: ${uiState.sessionShotCount}", 
-                        modifier = Modifier.padding(end = 16.dp),
-                        style = MaterialTheme.typography.labelLarge
-                    )
+                    Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(end = 16.dp)) {
+                        Text(
+                            "Total Today", 
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                        Text(
+                            "${uiState.dailyTotalShots}", 
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             ) 
         }
@@ -41,12 +50,21 @@ fun DrivingRangeScreen(viewModel: DrivingRangeViewModel = hiltViewModel()) {
         ) {
             // Club Selector
             Text(stringResource(R.string.practice_select_club), style = MaterialTheme.typography.titleMedium)
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(clubs) { club ->
+                    val usage = uiState.clubUsageToday[club.id] ?: 0
                     FilterChip(
                         selected = uiState.selectedClub == club,
                         onClick = { viewModel.selectClub(club) },
-                        label = { Text(club.name) }
+                        label = { 
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(club.name)
+                                if (usage > 0) {
+                                    Text("($usage)", style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                        },
+                        modifier = Modifier.height(IntrinsicSize.Min)
                     )
                 }
             }

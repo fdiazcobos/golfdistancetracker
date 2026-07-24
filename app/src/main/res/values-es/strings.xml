@@ -40,6 +40,17 @@
     <string name="session_plays_like">Se siente como: %1$s</string>
     <string name="session_target_dist">Distancia Objetivo (%1$s)</string>
 
+    <!-- Post-Shot Summary -->
+    <string name="session_summary_title">Rendimiento del Golpe</string>
+    <string name="session_longer">%1$s más largo que tu promedio</string>
+    <string name="session_shorter">%1$s más corto que tu promedio</string>
+    <string name="session_on_average">En tu promedio</string>
+    <string name="session_dev_side">%1$s a la %2$s</string>
+    <string name="session_dev_angle">%1$.1f° de desviación</string>
+    <string name="session_left">izquierda</string>
+    <string name="session_right">derecha</string>
+    <string name="session_straight">centro</string>
+
     <!-- Driving Range / Practice -->
     <string name="practice_title">Práctica Driving Range</string>
     <string name="practice_select_club">Seleccionar Palo</string>

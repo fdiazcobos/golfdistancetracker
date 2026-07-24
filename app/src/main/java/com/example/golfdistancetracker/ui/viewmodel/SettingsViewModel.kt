@@ -51,6 +51,13 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun updateHandicap(value: String) {
-        viewModelScope.launch { preferenceManager.updateHandicap(value) }
+        val numericValue = value.toDoubleOrNull()
+        if (numericValue != null) {
+            if (numericValue in 0.0..54.0) {
+                viewModelScope.launch { preferenceManager.updateHandicap(value) }
+            }
+        } else if (value.isEmpty()) {
+            viewModelScope.launch { preferenceManager.updateHandicap("") }
+        }
     }
 }

@@ -199,15 +199,36 @@ fun ClubStatsCard(stat: ClubStats) {
 
 @Composable
 fun QualityBar(breakdown: com.example.golfdistancetracker.ui.viewmodel.QualityBreakdown) {
-    Row(modifier = Modifier.fillMaxWidth().height(12.dp).clip(RoundedCornerShape(6.dp))) {
-        if (breakdown.misshotPct > 0) Box(modifier = Modifier.weight(breakdown.misshotPct.toFloat()).fillMaxHeight().background(Color.Red))
-        if (breakdown.poorPct > 0) Box(modifier = Modifier.weight(breakdown.poorPct.toFloat()).fillMaxHeight().background(Color.Gray))
-        if (breakdown.goodPct > 0) Box(modifier = Modifier.weight(breakdown.goodPct.toFloat()).fillMaxHeight().background(Color(0xFF1976D2)))
-        if (breakdown.greatPct > 0) Box(modifier = Modifier.weight(breakdown.greatPct.toFloat()).fillMaxHeight().background(Color(0xFF2E7D32)))
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().height(16.dp).clip(RoundedCornerShape(8.dp))) {
+            if (breakdown.misshotPct > 0) Box(modifier = Modifier.weight(breakdown.misshotPct.toFloat()).fillMaxHeight().background(Color.Red))
+            if (breakdown.poorPct > 0) Box(modifier = Modifier.weight(breakdown.poorPct.toFloat()).fillMaxHeight().background(Color.Gray))
+            if (breakdown.goodPct > 0) Box(modifier = Modifier.weight(breakdown.goodPct.toFloat()).fillMaxHeight().background(Color(0xFF1976D2)))
+            if (breakdown.greatPct > 0) Box(modifier = Modifier.weight(breakdown.greatPct.toFloat()).fillMaxHeight().background(Color(0xFF2E7D32)))
+        }
+        
+        // Multi-line Legend with Localized Labels
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            QualityLegendItem(stringResource(R.string.practice_misshot), breakdown.misshotPct, Color.Red)
+            QualityLegendItem(stringResource(R.string.practice_malo), breakdown.poorPct, Color.Gray)
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            QualityLegendItem(stringResource(R.string.practice_bien), breakdown.goodPct, Color(0xFF1976D2))
+            QualityLegendItem(stringResource(R.string.practice_muy_bien), breakdown.greatPct, Color(0xFF2E7D32))
+        }
     }
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text("Miss: ${(breakdown.misshotPct*100).toInt()}%", style = MaterialTheme.typography.labelSmall, color = Color.Red)
-        Text("Great: ${(breakdown.greatPct*100).toInt()}%", style = MaterialTheme.typography.labelSmall, color = Color(0xFF2E7D32))
+}
+
+@Composable
+fun QualityLegendItem(label: String, percent: Double, color: Color) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(modifier = Modifier.size(8.dp).background(color, androidx.compose.foundation.shape.CircleShape))
+        Spacer(Modifier.width(4.dp))
+        Text(
+            "$label: ${(percent * 100).toInt()}%", 
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 

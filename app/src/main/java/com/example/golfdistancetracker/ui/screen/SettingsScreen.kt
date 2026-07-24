@@ -37,9 +37,14 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             SettingsGroup(title = "Profile") {
                 OutlinedTextField(
                     value = userHandicap,
-                    onValueChange = { viewModel.updateHandicap(it) },
-                    label = { Text("My Handicap") },
+                    onValueChange = { 
+                        if (it.isEmpty() || it.toDoubleOrNull() != null) {
+                            viewModel.updateHandicap(it)
+                        }
+                    },
+                    label = { Text("My Handicap (0-54)") },
                     placeholder = { Text("e.g. 15.2") },
+                    isError = userHandicap.isNotEmpty() && (userHandicap.toDoubleOrNull() ?: -1.0) !in 0.0..54.0,
                     modifier = Modifier.fillMaxWidth().padding(8.dp),
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
                 )

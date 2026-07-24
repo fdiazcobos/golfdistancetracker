@@ -34,6 +34,9 @@ data class SessionUiState(
     val startLocation: Location? = null,
     val lastShotDistance: Double? = null,
     val lastShotLatDev: Double? = null,
+    val lastShotAngleDev: Double? = null,
+    val lastShotDistDiff: Double? = null,
+    val showShotSummary: Boolean = false,
     val isGpsReady: Boolean = false,
     val distanceUnit: DistanceUnit = DistanceUnit.METERS,
     val weather: WeatherInfo? = null,
@@ -62,9 +65,15 @@ class SessionViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             shotDao.getAllShots().collect { shots ->
-                val today = System.currentTimeMillis() - 24 * 60 * 60 * 1000
+                val calendar = java.util.Calendar.getInstance()
+                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                calendar.set(java.util.Calendar.MINUTE, 0)
+                calendar.set(java.util.Calendar.SECOND, 0)
+                calendar.set(java.util.Calendar.MILLISECOND, 0)
+                val startOfDay = calendar.timeInMillis
+                
                 val usage = shots
-                    .filter { it.timestamp > today && it.shotType == ShotType.FIELD }
+                    .filter { it.timestamp >= startOfDay && it.shotType == ShotType.FIELD }
                     .groupBy { it.clubId }
                     .mapValues { it.value.size }
                 _uiState.update { it.copy(clubUsage = usage) }
@@ -138,7 +147,11 @@ class SessionViewModel @Inject constructor(
     }
 
     fun resetSession() {
-        _uiState.update { it.copy(selectedClub = null, startLocation = null, targetDistanceMeters = null, playsLikeDistance = null) }
+        _uiState.update { it.copy(selectedClub = null, startLocation = null, targetDistanceMeters = null, playsLikeDistance = null, showShotSummary = false) }
+    }
+
+    fun closeSummary() {
+        _uiState.update { it.copy(showShotSummary = false) }
     }
 
     fun markStart() {
@@ -165,10 +178,21 @@ class SessionViewModel @Inject constructor(
             val normActual = (actualBearing + 360) % 360
             val normIntended = (intended + 360) % 360
             
-            val angleDiff = Math.toRadians((normActual - normIntended).toDouble())
-            val latDev = distance * Math.sin(angleDiff)
+            // Angular difference (signed)
+            var angleDiff = (normActual - normIntended).toDouble()
+            if (angleDiff > 180) angleDiff -= 360
+            if (angleDiff < -180) angleDiff += 360
+            
+            val angleDiffRad = Math.toRadians(angleDiff)
+            val latDev = distance * Math.sin(angleDiffRad)
 
             viewModelScope.launch {
+                // Calculate distance difference from average
+                val stats = repository.clubStats.first()
+                val clubStats = stats.find { it.club.id == club.id }
+                val avgDist = clubStats?.averageDistance
+                val distDiff = avgDist?.let { distance - it }
+
                 shotDao.insertShot(
                     Shot(
                         clubId = club.id,
@@ -183,14 +207,18 @@ class SessionViewModel @Inject constructor(
                         lateralDeviation = latDev
                     )
                 )
+
+                _uiState.update { it.copy(
+                    lastShotDistance = distance, 
+                    lastShotLatDev = latDev, 
+                    lastShotAngleDev = angleDiff,
+                    lastShotDistDiff = distDiff,
+                    showShotSummary = true,
+                    startLocation = null,
+                    targetDistanceMeters = null,
+                    playsLikeDistance = null
+                ) }
             }
-            _uiState.update { it.copy(
-                lastShotDistance = distance, 
-                lastShotLatDev = latDev, 
-                startLocation = null,
-                targetDistanceMeters = null,
-                playsLikeDistance = null
-            ) }
         }
     }
 }

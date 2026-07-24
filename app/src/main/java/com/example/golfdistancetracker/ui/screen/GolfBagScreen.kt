@@ -244,6 +244,7 @@ fun ClubDialog(
                         value = brand,
                         onValueChange = { brand = it },
                         label = { Text(stringResource(R.string.bag_brand)) },
+                        readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = brandExpanded) },
                         modifier = Modifier.menuAnchor().fillMaxWidth()
                     )

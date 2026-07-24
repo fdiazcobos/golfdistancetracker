@@ -1,6 +1,7 @@
 package com.example.golfdistancetracker.ui.screen
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -8,6 +9,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Air
 import androidx.compose.material.icons.filled.TipsAndUpdates
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -61,6 +63,13 @@ fun SessionScreen(viewModel: SessionViewModel = hiltViewModel()) {
                     onMarkStart = { viewModel.markStart() },
                     onMarkEnd = { viewModel.markEnd() },
                     onTargetChange = { viewModel.updateTargetDistance(it) }
+                )
+            }
+
+            if (uiState.showShotSummary) {
+                ShotSummaryDialog(
+                    uiState = uiState,
+                    onDismiss = { viewModel.closeSummary() }
                 )
             }
         }
@@ -242,4 +251,91 @@ fun TrackingUI(
             )
         }
     }
+}
+
+@Composable
+fun ShotSummaryDialog(
+    uiState: com.example.golfdistancetracker.ui.viewmodel.SessionUiState,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { 
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.TipsAndUpdates, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.session_summary_title)) 
+            }
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                // Distance Section
+                Column {
+                    Text(
+                        UnitConverter.formatDistance(uiState.lastShotDistance, uiState.distanceUnit),
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    
+                    uiState.lastShotDistDiff?.let { diff ->
+                        val isLonger = diff > 0
+                        val color = if (isLonger) Color(0xFF2E7D32) else Color.Red
+                        val label = if (isLonger) R.string.session_longer else R.string.session_shorter
+                        
+                        Text(
+                            stringResource(label, UnitConverter.formatDistance(Math.abs(diff), uiState.distanceUnit)),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = color,
+                            fontWeight = FontWeight.Bold
+                        )
+                    } ?: Text(stringResource(R.string.session_on_average), style = MaterialTheme.typography.bodyMedium)
+                }
+
+                HorizontalDivider()
+
+                // Direction Section
+                Column {
+                    val latDev = uiState.lastShotLatDev ?: 0.0
+                    val isRight = latDev > 0
+                    val sideLabel = if (isRight) R.string.session_right else R.string.session_left
+                    
+                    Text(
+                        stringResource(R.string.session_dev_side, UnitConverter.formatDistance(Math.abs(latDev), uiState.distanceUnit), stringResource(sideLabel)),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    
+                    uiState.lastShotAngleDev?.let { angle ->
+                        Text(
+                            stringResource(R.string.session_dev_angle, Math.abs(angle)),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    }
+                }
+
+                // Visual Deviation Bar
+                Box(modifier = Modifier.fillMaxWidth().height(40.dp), contentAlignment = Alignment.Center) {
+                    Canvas(modifier = Modifier.fillMaxWidth().height(4.dp)) {
+                        drawLine(color = Color.LightGray, start = androidx.compose.ui.geometry.Offset(0f, size.height/2), end = androidx.compose.ui.geometry.Offset(size.width, size.height/2), strokeWidth = 4f)
+                        drawLine(color = Color.Gray, start = androidx.compose.ui.geometry.Offset(size.width/2, 0f), end = androidx.compose.ui.geometry.Offset(size.width/2, size.height), strokeWidth = 4f)
+                    }
+                    
+                    val maxDev = 20.0 // meters for full scale
+                    val progress = ((uiState.lastShotLatDev ?: 0.0) / maxDev).coerceIn(-1.0, 1.0).toFloat()
+                    
+                    Box(
+                        modifier = Modifier
+                            .offset(x = (80 * progress).dp) // Approximate visual shift
+                            .size(12.dp)
+                            .background(Color.Red, androidx.compose.foundation.shape.CircleShape)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onDismiss) { Text("OK") }
+        }
+    )
 }
