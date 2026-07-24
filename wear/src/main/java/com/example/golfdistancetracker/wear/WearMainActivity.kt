@@ -48,7 +48,8 @@ fun WearPermissionGuard(content: @Composable () -> Unit) {
     val requiredPermissions = arrayOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.BODY_SENSORS,
-        Manifest.permission.ACTIVITY_RECOGNITION
+        Manifest.permission.ACTIVITY_RECOGNITION,
+        Manifest.permission.VIBRATE
     )
 
     var permissionsGranted by remember {
@@ -76,7 +77,7 @@ fun WearPermissionGuard(content: @Composable () -> Unit) {
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = stringResource(R.string.perm_title),
+                        text = "Permissions",
                         style = MaterialTheme.typography.titleSmall,
                         textAlign = TextAlign.Center
                     )
@@ -85,7 +86,7 @@ fun WearPermissionGuard(content: @Composable () -> Unit) {
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { launcher.launch(requiredPermissions) }
                     ) {
-                        Text(stringResource(R.string.common_grant))
+                        Text("Grant")
                     }
                 }
             }
@@ -156,7 +157,7 @@ fun ModeSelectionScreen(onModeSelected: (WearMode) -> Unit, onOpenSettings: () -
             verticalArrangement = Arrangement.Center
         ) {
             Button(
-                modifier = Modifier.fillMaxWidth(0.8f).height(56.dp),
+                modifier = Modifier.fillMaxWidth(0.85f).height(56.dp),
                 onClick = { onModeSelected(WearMode.PLAY) }
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -167,7 +168,7 @@ fun ModeSelectionScreen(onModeSelected: (WearMode) -> Unit, onOpenSettings: () -
             }
             Spacer(Modifier.height(8.dp))
             Button(
-                modifier = Modifier.fillMaxWidth(0.8f).height(56.dp),
+                modifier = Modifier.fillMaxWidth(0.85f).height(56.dp),
                 onClick = { onModeSelected(WearMode.PRACTICE) },
                 colors = ButtonDefaults.filledTonalButtonColors()
             ) {
@@ -201,7 +202,7 @@ fun WearSettingsScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             item {
-                Text("Settings", modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp), textAlign = TextAlign.Center, style = MaterialTheme.typography.labelSmall)
+                Text("Settings", modifier = Modifier.fillMaxWidth().padding(top = 24.dp, bottom = 8.dp), textAlign = TextAlign.Center, style = MaterialTheme.typography.labelSmall)
             }
             item {
                 Button(
@@ -212,21 +213,6 @@ fun WearSettingsScreen(
                     Text(if (uiState.autoImpactEnabled) "Auto Detect: ON" else "Auto Detect: OFF", fontSize = 10.sp)
                 }
             }
-            
-            if (uiState.autoImpactEnabled) {
-                item {
-                    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)) {
-                        Text("Sensitivity: ${uiState.impactThreshold.toInt()}G", style = MaterialTheme.typography.labelSmall, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-                        Slider(
-                            value = uiState.impactThreshold,
-                            onValueChange = onUpdateThreshold,
-                            valueRange = 15f..100f,
-                            steps = 8
-                        )
-                    }
-                }
-            }
-
             item {
                 Text("GPS Source", modifier = Modifier.fillMaxWidth().padding(top = 8.dp), textAlign = TextAlign.Center, style = MaterialTheme.typography.labelSmall)
             }
@@ -249,14 +235,29 @@ fun WearSettingsScreen(
                     }
                 }
             }
+            
+            if (uiState.autoImpactEnabled) {
+                item {
+                    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)) {
+                        Text("Impact: ${uiState.impactThreshold.toInt()}G", style = MaterialTheme.typography.labelSmall, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                        Slider(
+                            value = uiState.impactThreshold,
+                            onValueChange = onUpdateThreshold,
+                            valueRange = 15f..100f,
+                            steps = 8
+                        )
+                    }
+                }
+            }
+
             item {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-                    Text("v0.2.4", style = MaterialTheme.typography.labelSmall)
+                    Text("v0.2.6", style = MaterialTheme.typography.labelSmall)
                     Text(stringResource(R.string.settings_build_date), style = MaterialTheme.typography.labelSmall, color = Color.Gray, textAlign = TextAlign.Center)
                 }
             }
             item {
-                TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+                TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
                     Text("Done")
                 }
             }
@@ -278,7 +279,9 @@ fun ClubSelectionScreen(uiState: WearUiState, onClubSelected: (String) -> Unit, 
             item {
                 Text(
                     "Select Club",
-                    modifier = Modifier.fillMaxWidth().padding(top = 24.dp, bottom = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 28.dp, bottom = 8.dp),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.labelSmall
                 )
@@ -287,7 +290,9 @@ fun ClubSelectionScreen(uiState: WearUiState, onClubSelected: (String) -> Unit, 
                 val clubName = clubs[index]
                 val usage = uiState.clubUsageMap[clubName] ?: 0
                 Button(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 2.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 2.dp),
                     onClick = { onClubSelected(clubName) },
                     colors = ButtonDefaults.filledTonalButtonColors()
                 ) {
@@ -300,7 +305,12 @@ fun ClubSelectionScreen(uiState: WearUiState, onClubSelected: (String) -> Unit, 
                 }
             }
             item {
-                TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
+                TextButton(
+                    onClick = onBack, 
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 28.dp)
+                ) {
                     Text("Cancel", color = MaterialTheme.colorScheme.error)
                 }
             }
@@ -312,10 +322,13 @@ fun ClubSelectionScreen(uiState: WearUiState, onClubSelected: (String) -> Unit, 
 fun ReadyToHitScreen(uiState: WearUiState, onManualMark: () -> Unit, onBack: () -> Unit) {
     ScreenScaffold {
         Column(
-            modifier = Modifier.fillMaxSize().padding(top = 28.dp, bottom = 24.dp, start = 12.dp, end = 12.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 32.dp, bottom = 26.dp, start = 14.dp, end = 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
+            // Club & Daily Info
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     uiState.currentClub.uppercase(), 
@@ -337,30 +350,53 @@ fun ReadyToHitScreen(uiState: WearUiState, onManualMark: () -> Unit, onBack: () 
                 }
             }
             
+            // Ready Status
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("READY", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
                 Text(
-                    if (uiState.autoImpactEnabled) "Swing detect ON" else "Auto-detect OFF", 
+                    "READY", 
+                    style = MaterialTheme.typography.titleLarge, 
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White
+                )
+                Text(
+                    if (uiState.autoImpactEnabled) "Vibration ON" else "Auto OFF", 
                     style = MaterialTheme.typography.labelSmall,
                     color = if (uiState.autoImpactEnabled) Color(0xFF4CAF50) else Color.Gray
                 )
             }
 
+            // Controls
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onBack, modifier = Modifier.size(44.dp)) { 
                         Icon(Icons.Default.Close, null, tint = Color.Red.copy(alpha = 0.8f)) 
                     }
                     Spacer(Modifier.width(12.dp))
-                    Button(onClick = onManualMark, modifier = Modifier.height(48.dp).weight(1f)) { 
+                    Button(
+                        onClick = { onManualMark() }, 
+                        modifier = Modifier.height(48.dp).weight(1f)
+                    ) { 
                         Text("MARK", fontWeight = FontWeight.Black) 
                     }
                 }
                 
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
-                    Icon(if (uiState.isUsingPhoneGps) Icons.Default.Smartphone else Icons.Default.Watch, null, modifier = Modifier.size(10.dp), tint = Color.Gray)
+                // Status Bar
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 4.dp)
+                ) {
+                    Icon(
+                        if (uiState.isUsingPhoneGps) Icons.Default.Smartphone else Icons.Default.Watch, 
+                        null, 
+                        modifier = Modifier.size(10.dp),
+                        tint = Color.Gray
+                    )
                     Spacer(Modifier.width(4.dp))
-                    Text(if (uiState.isUsingPhoneGps) "Phone GPS" else "Watch GPS", fontSize = 8.sp, color = Color.Gray)
+                    Text(
+                        if (uiState.isUsingPhoneGps) "Phone GPS" else "Watch GPS", 
+                        fontSize = 8.sp,
+                        color = Color.Gray
+                    )
                 }
             }
         }
@@ -371,7 +407,9 @@ fun ReadyToHitScreen(uiState: WearUiState, onManualMark: () -> Unit, onBack: () 
 fun WalkingScreen(uiState: WearUiState, onReachedBall: () -> Unit, onBack: () -> Unit) {
     ScreenScaffold {
         Column(
-            modifier = Modifier.fillMaxSize().padding(top = 28.dp, bottom = 24.dp, start = 16.dp, end = 16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 32.dp, bottom = 26.dp, start = 16.dp, end = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
@@ -382,7 +420,11 @@ fun WalkingScreen(uiState: WearUiState, onReachedBall: () -> Unit, onBack: () ->
             }
             
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("WALKING", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+                Text(
+                    "WALKING", 
+                    style = MaterialTheme.typography.labelSmall, 
+                    color = MaterialTheme.colorScheme.secondary
+                )
                 Text(
                     "${uiState.currentShotDistance?.toInt() ?: 0}m",
                     style = MaterialTheme.typography.displayMedium,
@@ -390,7 +432,12 @@ fun WalkingScreen(uiState: WearUiState, onReachedBall: () -> Unit, onBack: () ->
                 )
             }
 
-            Button(modifier = Modifier.fillMaxWidth().height(48.dp), onClick = onReachedBall) {
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                onClick = onReachedBall
+            ) {
                 Text("FOUND BALL", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
             }
         }
@@ -401,11 +448,13 @@ fun WalkingScreen(uiState: WearUiState, onReachedBall: () -> Unit, onBack: () ->
 fun DirectionPickerScreen(onDirectionSelected: (String) -> Unit, onBack: () -> Unit) {
     ScreenScaffold {
         Column(
-            modifier = Modifier.fillMaxSize().padding(top = 28.dp, bottom = 24.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 32.dp, bottom = 26.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack, modifier = Modifier.size(32.dp)) { 
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, null, modifier = Modifier.size(20.dp)) 
                 }
@@ -415,11 +464,11 @@ fun DirectionPickerScreen(onDirectionSelected: (String) -> Unit, onBack: () -> U
             }
             Spacer(Modifier.height(16.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                Button(onClick = { onDirectionSelected("Left") }, modifier = Modifier.size(52.dp), colors = ButtonDefaults.filledTonalButtonColors()) { Text("⬅️", fontSize = 20.sp) }
+                Button(onClick = { onDirectionSelected("Left") }, modifier = Modifier.size(56.dp), colors = ButtonDefaults.filledTonalButtonColors()) { Text("⬅️", fontSize = 24.sp) }
                 Spacer(Modifier.width(8.dp))
-                Button(onClick = { onDirectionSelected("Straight") }, modifier = Modifier.size(60.dp)) { Text("🎯", fontSize = 24.sp) }
+                Button(onClick = { onDirectionSelected("Straight") }, modifier = Modifier.size(64.dp)) { Text("🎯", fontSize = 28.sp) }
                 Spacer(Modifier.width(8.dp))
-                Button(onClick = { onDirectionSelected("Right") }, modifier = Modifier.size(52.dp), colors = ButtonDefaults.filledTonalButtonColors()) { Text("➡️", fontSize = 20.sp) }
+                Button(onClick = { onDirectionSelected("Right") }, modifier = Modifier.size(56.dp), colors = ButtonDefaults.filledTonalButtonColors()) { Text("➡️", fontSize = 24.sp) }
             }
         }
     }
@@ -429,18 +478,42 @@ fun DirectionPickerScreen(onDirectionSelected: (String) -> Unit, onBack: () -> U
 fun PracticeRatingScreen(onRated: (Int) -> Unit) {
     ScreenScaffold {
         Column(
-            modifier = Modifier.fillMaxSize().padding(top = 24.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Text("How was it?", style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.height(16.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                Button(onClick = { onRated(0) }, modifier = Modifier.size(54.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) { Text("💩", fontSize = 24.sp) }
-                Spacer(Modifier.width(8.dp))
-                Button(onClick = { onRated(1) }, modifier = Modifier.size(60.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))) { Text("👍", fontSize = 24.sp) }
-                Spacer(Modifier.width(8.dp))
-                Button(onClick = { onRated(2) }, modifier = Modifier.size(54.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))) { Text("🔥", fontSize = 24.sp) }
+            Row(
+                modifier = Modifier.fillMaxWidth(), 
+                horizontalArrangement = Arrangement.Center, 
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = { onRated(0) }, 
+                    modifier = Modifier.size(56.dp), 
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) { 
+                    Text("💩", fontSize = 28.sp) 
+                }
+                Spacer(Modifier.width(12.dp))
+                Button(
+                    onClick = { onRated(1) }, 
+                    modifier = Modifier.size(64.dp), 
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
+                ) { 
+                    Text("👍", fontSize = 28.sp) 
+                }
+                Spacer(Modifier.width(12.dp))
+                Button(
+                    onClick = { onRated(2) }, 
+                    modifier = Modifier.size(56.dp), 
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
+                ) { 
+                    Text("🔥", fontSize = 28.sp) 
+                }
             }
         }
     }
@@ -456,7 +529,7 @@ fun SummaryScreen(uiState: WearUiState, onDone: () -> Unit) {
         ) {
             Text("SHOT SAVED", style = MaterialTheme.typography.titleSmall, color = Color(0xFF4CAF50))
             Spacer(Modifier.height(12.dp))
-            Text("${uiState.lastShotDistance?.toInt() ?: 0}m", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
+            Text("${uiState.lastShotDistance?.toInt() ?: 0}m", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(uiState.lastShotDirection ?: "Center", style = MaterialTheme.typography.labelSmall)
             
             Spacer(Modifier.height(16.dp))

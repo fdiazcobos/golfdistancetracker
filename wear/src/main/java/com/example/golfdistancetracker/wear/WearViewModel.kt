@@ -9,6 +9,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 enum class WearMode {
@@ -62,6 +63,10 @@ class WearViewModel @Inject constructor(
 
     init {
         dataClient.addListener(this)
+        
+        // Initial Fetch
+        fetchInitialData()
+
         viewModelScope.launch {
             swingAnalyzer.events.collect { event ->
                 if (_uiState.value.autoImpactEnabled) {
@@ -104,34 +109,54 @@ class WearViewModel @Inject constructor(
         }
     }
 
+    private fun fetchInitialData() {
+        viewModelScope.launch {
+            try {
+                val dataItems = Wearable.getDataClient(context).dataItems.await()
+                dataItems.forEach { item ->
+                    if (item.uri.path == "/daily_stats") {
+                        updateStatsFromMap(DataMapItem.fromDataItem(item).dataMap)
+                    } else if (item.uri.path == "/settings") {
+                        updateSettingsFromMap(DataMapItem.fromDataItem(item).dataMap)
+                    }
+                }
+                dataItems.release()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     override fun onDataChanged(dataEvents: DataEventBuffer) {
         dataEvents.forEach { event ->
             if (event.type == DataEvent.TYPE_CHANGED) {
                 when (event.dataItem.uri.path) {
-                    "/daily_stats" -> {
-                        val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
-                        val total = dataMap.getInt("total_today")
-                        val usage = mutableMapOf<String, Int>()
-                        dataMap.keySet().filter { it.startsWith("usage_") }.forEach { key ->
-                            val clubName = key.removePrefix("usage_")
-                            usage[clubName] = dataMap.getInt(key)
-                        }
-                        _uiState.update { it.copy(dailyTotal = total, clubUsageMap = usage) }
-                    }
-                    "/settings" -> {
-                        val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
-                        val threshold = dataMap.getFloat("impact_threshold")
-                        val auto = dataMap.getBoolean("auto_impact")
-                        val gps = dataMap.getString("gps_source") ?: "Phone"
-                        
-                        viewModelScope.launch {
-                            preferenceManager.updateImpactThreshold(threshold)
-                            preferenceManager.updateAutoImpact(auto)
-                            preferenceManager.updateGpsSource(gps)
-                        }
-                    }
+                    "/daily_stats" -> updateStatsFromMap(DataMapItem.fromDataItem(event.dataItem).dataMap)
+                    "/settings" -> updateSettingsFromMap(DataMapItem.fromDataItem(event.dataItem).dataMap)
                 }
             }
+        }
+    }
+
+    private fun updateStatsFromMap(dataMap: DataMap) {
+        val total = dataMap.getInt("total_today")
+        val usage = mutableMapOf<String, Int>()
+        dataMap.keySet().filter { it.startsWith("usage_") }.forEach { key ->
+            val clubName = key.removePrefix("usage_")
+            usage[clubName] = dataMap.getInt(key)
+        }
+        _uiState.update { it.copy(dailyTotal = total, clubUsageMap = usage) }
+    }
+
+    private fun updateSettingsFromMap(dataMap: DataMap) {
+        val threshold = dataMap.getFloat("impact_threshold")
+        val auto = dataMap.getBoolean("auto_impact")
+        val gps = dataMap.getString("gps_source") ?: "Phone"
+        
+        viewModelScope.launch {
+            preferenceManager.updateImpactThreshold(threshold)
+            preferenceManager.updateAutoImpact(auto)
+            preferenceManager.updateGpsSource(gps)
         }
     }
 
@@ -186,7 +211,6 @@ class WearViewModel @Inject constructor(
         if (state.mode == WearMode.PRACTICE) {
             _uiState.update { it.copy(screen = WearScreen.PRACTICE_RATING) }
         } else {
-            // Immediate UI transition
             _uiState.update { it.copy(screen = WearScreen.WALKING, currentShotDistance = 0.0) }
             viewModelScope.launch {
                 val impactLoc = locationHelper.getCurrentLocation()
@@ -212,7 +236,12 @@ class WearViewModel @Inject constructor(
                 isPractice = false,
                 direction = direction
             )
-            _uiState.update { it.copy(screen = WearScreen.SUMMARY, lastShotDirection = direction) }
+            // Optimistic Update
+            _uiState.update { it.copy(
+                screen = WearScreen.SUMMARY, 
+                lastShotDirection = direction,
+                dailyTotal = it.dailyTotal + 1
+            ) }
         }
     }
 
@@ -255,6 +284,6 @@ class WearViewModel @Inject constructor(
 
     fun resetToStart() {
         swingAnalyzer.stop()
-        _uiState.update { WearUiState() }
+        _uiState.update { it.copy(screen = WearScreen.MODE_SELECTION, isTracking = false) }
     }
 }
