@@ -134,20 +134,23 @@ fun PracticeLoadSection(stats: List<ClubStats>) {
         practiceStats.forEach { stat ->
             val totalBalls = stat.shots.size
             Column(modifier = Modifier.padding(vertical = 12.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    verticalAlignment = Alignment.Bottom, 
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text(
                         stat.club.name, 
-                        style = MaterialTheme.typography.titleMedium, 
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        style = MaterialTheme.typography.titleLarge, 
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
                     )
                     Text(
                         "$totalBalls balls", 
                         style = MaterialTheme.typography.labelMedium, 
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Black
+                        color = MaterialTheme.colorScheme.secondary,
+                        fontWeight = FontWeight.Bold
                     )
                 }
                 
