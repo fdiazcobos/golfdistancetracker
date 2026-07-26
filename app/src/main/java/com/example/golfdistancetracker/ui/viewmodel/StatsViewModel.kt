@@ -16,7 +16,8 @@ import javax.inject.Inject
 data class StatsFilters(
     val selectedClubIds: Set<Long> = emptySet(),
     val shotType: ShotType? = null,
-    val startDate: Long? = null
+    val startDate: Long? = null,
+    val includeMisshotsInDispersion: Boolean = true
 )
 
 data class CourseAnalytics(
@@ -124,6 +125,10 @@ class StatsViewModel @Inject constructor(
 
     fun updateShotTypeFilter(type: ShotType?) {
         _filters.update { it.copy(shotType = type) }
+    }
+
+    fun toggleMisshotsInDispersion(include: Boolean) {
+        _filters.update { it.copy(includeMisshotsInDispersion = include) }
     }
 
     fun resetAllStats() {

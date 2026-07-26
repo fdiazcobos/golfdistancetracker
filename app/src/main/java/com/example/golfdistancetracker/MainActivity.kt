@@ -192,6 +192,12 @@ fun MainApp(authManager: AuthManager) {
                             selected = currentRoute == "stats",
                             onClick = { navController.navigate("stats") }
                         )
+                        NavigationBarItem(
+                            icon = { Icon(Icons.Default.AutoAwesome, contentDescription = null) },
+                            label = { Text("Caddie") },
+                            selected = currentRoute == "assistant",
+                            onClick = { navController.navigate("assistant") }
+                        )
                     }
                 }
             ) { innerPadding ->
@@ -213,6 +219,7 @@ fun MainApp(authManager: AuthManager) {
                         composable("stats") { StatsScreen() }
                         composable("scorecard") { ScorecardScreen() }
                         composable("settings") { SettingsScreen() }
+                        composable("assistant") { AssistantScreen() }
                     }
 
                     // Global Connectivity Indicator

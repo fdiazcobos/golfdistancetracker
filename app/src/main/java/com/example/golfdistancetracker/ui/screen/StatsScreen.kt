@@ -72,7 +72,11 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
                     
                     items(clubStats) { stat ->
                         if (stat.shots.isNotEmpty()) {
-                            ClubStatsCard(stat)
+                            ClubStatsCard(
+                                stat = stat,
+                                includeMisshots = filters.includeMisshotsInDispersion,
+                                onToggleMisshots = { viewModel.toggleMisshotsInDispersion(it) }
+                            )
                         }
                     }
                 }
@@ -170,23 +174,18 @@ fun PracticeLoadSection(stats: List<ClubStats>) {
         
         practiceStats.forEach { stat ->
             val totalBalls = stat.shots.size
-            Column(modifier = Modifier.padding(vertical = 12.dp)) {
-                Row(
-                    verticalAlignment = Alignment.Bottom, 
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                     Text(
                         stat.club.name, 
-                        style = MaterialTheme.typography.titleLarge, 
+                        style = MaterialTheme.typography.titleMedium, 
                         fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f)
                     )
                     Text(
                         "$totalBalls balls", 
                         style = MaterialTheme.typography.labelMedium, 
-                        color = MaterialTheme.colorScheme.secondary,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -265,7 +264,7 @@ fun GappingAnalysisSection(stats: List<ClubStats>) {
 }
 
 @Composable
-fun ClubStatsCard(stat: ClubStats) {
+fun ClubStatsCard(stat: ClubStats, includeMisshots: Boolean, onToggleMisshots: (Boolean) -> Unit) {
     Card(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(stat.club.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
@@ -286,9 +285,17 @@ fun ClubStatsCard(stat: ClubStats) {
             Text(stringResource(R.string.stats_quality_breakdown), style = MaterialTheme.typography.labelMedium)
             QualityBar(stat.qualityBreakdown)
             
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(stringResource(R.string.stats_dispersion), style = MaterialTheme.typography.labelMedium)
-            ShotDispersionDiana(stat.shots)
+            Spacer(modifier = Modifier.height(24.dp))
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(stringResource(R.string.stats_dispersion), style = MaterialTheme.typography.labelMedium)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Show Misses", style = MaterialTheme.typography.labelSmall)
+                    Checkbox(checked = includeMisshots, onCheckedChange = onToggleMisshots)
+                }
+            }
+            
+            val displayedShots = if (includeMisshots) stat.shots else stat.shots.filter { !it.isMishit }
+            ShotDispersionDiana(displayedShots)
         }
     }
 }

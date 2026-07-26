@@ -54,7 +54,8 @@ data class WearUiState(
     val clubUsageMap: Map<String, Int> = emptyMap(),
     val isPhoneAppActive: Boolean = false,
     val syncedClubs: List<SyncedClub> = emptyList(),
-    val isSyncingShot: Boolean = false
+    val isSyncingShot: Boolean = false,
+    val pendingQuality: Int? = null
 )
 
 @HiltViewModel
@@ -268,6 +269,7 @@ class WearViewModel @Inject constructor(
         if (state.mode == WearMode.PRACTICE) {
             _uiState.update { it.copy(screen = WearScreen.PRACTICE_RATING) }
         } else {
+            // Immediate UI transition
             _uiState.update { it.copy(screen = WearScreen.WALKING, currentShotDistance = 0.0) }
             viewModelScope.launch {
                 val impactLoc = locationHelper.getCurrentLocation()
@@ -291,41 +293,39 @@ class WearViewModel @Inject constructor(
             dataService.sendShotToPhone(
                 clubId = club.id,
                 clubName = club.name,
-                distance = state.lastShotDistance,
+                distance = if (state.mode == WearMode.PLAY) state.lastShotDistance else null,
                 tempo = state.lastTempo,
-                isPractice = false,
-                direction = direction
+                isPractice = state.mode == WearMode.PRACTICE,
+                direction = direction,
+                quality = if (state.mode == WearMode.PRACTICE) state.pendingQuality else null
             )
-            _uiState.update { it.copy(
-                screen = WearScreen.SUMMARY, 
-                lastShotDirection = direction,
-                dailyTotal = it.dailyTotal + 1
-            ) }
+            
+            if (state.mode == WearMode.PLAY) {
+                _uiState.update { it.copy(
+                    screen = WearScreen.SUMMARY, 
+                    lastShotDirection = direction,
+                    dailyTotal = it.dailyTotal + 1
+                ) }
+            } else {
+                // Optimistic Update for Practice
+                val newUsage = state.clubUsageMap.toMutableMap()
+                newUsage[club.name] = (newUsage[club.name] ?: 0) + 1
+                _uiState.update { it.copy(
+                    screen = WearScreen.READY_TO_HIT, 
+                    dailyTotal = it.dailyTotal + 1,
+                    clubUsageMap = newUsage,
+                    pendingQuality = null,
+                    isSyncingShot = false
+                ) }
+            }
         }
     }
 
     fun ratePracticeShot(quality: Int) {
-        val state = _uiState.value
-        val club = state.currentClub ?: return
-        viewModelScope.launch {
-            _uiState.update { it.copy(isSyncingShot = true) }
-            dataService.sendShotToPhone(
-                clubId = club.id,
-                clubName = club.name,
-                distance = null,
-                tempo = state.lastTempo,
-                isPractice = true,
-                quality = quality
-            )
-            // Optimistically update counts
-            val newUsage = state.clubUsageMap.toMutableMap()
-            newUsage[club.name] = (newUsage[club.name] ?: 0) + 1
-            _uiState.update { it.copy(
-                screen = WearScreen.READY_TO_HIT, 
-                dailyTotal = it.dailyTotal + 1,
-                clubUsageMap = newUsage
-            ) }
-        }
+        _uiState.update { it.copy(
+            pendingQuality = quality,
+            screen = WearScreen.DIRECTION_INPUT
+        ) }
     }
 
     fun openSettings() {

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -110,6 +111,19 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     selected = gpsSource == "Watch",
                     onClick = { viewModel.updateGpsSource("Watch") }
                 )
+            }
+
+            // Data Management
+            SettingsGroup(title = "Data Management") {
+                Button(
+                    onClick = { viewModel.exportData() },
+                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+                ) {
+                    Icon(Icons.Default.Share, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Export Stats (Excel/CSV)")
+                }
             }
 
             // Units

@@ -1,7 +1,10 @@
 package com.example.golfdistancetracker.di
 
 import android.content.Context
+import com.example.golfdistancetracker.data.dao.ClubDao
+import com.example.golfdistancetracker.data.dao.ShotDao
 import com.example.golfdistancetracker.util.CompassHelper
+import com.example.golfdistancetracker.util.ExportManager
 import com.example.golfdistancetracker.util.LocationHelper
 import dagger.Module
 import dagger.Provides
@@ -20,4 +23,12 @@ object AppModule {
     @Provides
     @Singleton
     fun provideCompassHelper(@ApplicationContext context: Context) = CompassHelper(context)
+
+    @Provides
+    @Singleton
+    fun provideExportManager(
+        @ApplicationContext context: Context,
+        shotDao: ShotDao,
+        clubDao: ClubDao
+    ) = ExportManager(context, shotDao, clubDao)
 }

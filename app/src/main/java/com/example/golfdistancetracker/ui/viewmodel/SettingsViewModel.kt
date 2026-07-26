@@ -3,6 +3,7 @@ package com.example.golfdistancetracker.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.golfdistancetracker.data.prefs.*
+import com.example.golfdistancetracker.util.ExportManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -11,8 +12,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val preferenceManager: PreferenceManager
+    private val preferenceManager: PreferenceManager,
+    private val exportManager: ExportManager
 ) : ViewModel() {
+    
+    fun exportData() {
+        viewModelScope.launch {
+            exportManager.exportToCsv()
+        }
+    }
 
     val distanceUnit = preferenceManager.distanceUnit.stateIn(
         viewModelScope,
