@@ -2,7 +2,7 @@ package com.example.golfdistancetracker.ui.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -27,6 +27,7 @@ import com.example.golfdistancetracker.ui.viewmodel.GolfBagViewModel
 fun GolfBagScreen(viewModel: GolfBagViewModel = hiltViewModel()) {
     val clubs by viewModel.clubs.collectAsState()
     var clubToEdit by remember { mutableStateOf<Club?>(null) }
+    var clubToDelete by remember { mutableStateOf<Club?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -41,11 +42,15 @@ fun GolfBagScreen(viewModel: GolfBagViewModel = hiltViewModel()) {
             EmptyBagView()
         } else {
             LazyColumn(modifier = Modifier.padding(padding).fillMaxSize()) {
-                items(clubs) { club ->
+                itemsIndexed(clubs) { index, club ->
                     ClubItem(
-                        club, 
+                        club = club, 
                         onEdit = { clubToEdit = club },
-                        onDelete = { viewModel.deleteClub(club) }
+                        onDelete = { clubToDelete = club },
+                        onMoveUp = { viewModel.moveClubUp(club) },
+                        onMoveDown = { viewModel.moveClubDown(club) },
+                        isFirst = index == 0,
+                        isLast = index == clubs.size - 1
                     )
                 }
             }
@@ -68,6 +73,30 @@ fun GolfBagScreen(viewModel: GolfBagViewModel = hiltViewModel()) {
                 onSave = { name, type, number, brand, model ->
                     viewModel.updateClub(clubToEdit!!.copy(name = name, type = type, number = number, brand = brand, model = model))
                     clubToEdit = null
+                }
+            )
+        }
+
+        if (clubToDelete != null) {
+            AlertDialog(
+                onDismissRequest = { clubToDelete = null },
+                title = { Text("Delete Club?") },
+                text = { Text("Are you sure you want to remove ${clubToDelete!!.name}? All recorded statistics for this club will be permanently deleted.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.deleteClub(clubToDelete!!)
+                            clubToDelete = null
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { clubToDelete = null }) {
+                        Text(stringResource(R.string.common_cancel))
+                    }
                 }
             )
         }
@@ -99,16 +128,54 @@ fun EmptyBagView() {
 }
 
 @Composable
-fun ClubItem(club: Club, onEdit: () -> Unit, onDelete: () -> Unit) {
+fun ClubItem(
+    club: Club, 
+    onEdit: () -> Unit, 
+    onDelete: () -> Unit,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
+    isFirst: Boolean,
+    isLast: Boolean
+) {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         onClick = onEdit
     ) {
         Row(
-            modifier = Modifier.padding(16.dp), 
+            modifier = Modifier.padding(12.dp), 
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Reorder controls
+            Column(
+                modifier = Modifier.padding(end = 8.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                IconButton(
+                    onClick = onMoveUp, 
+                    enabled = !isFirst,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        Icons.Default.KeyboardArrowUp, 
+                        contentDescription = "Move Up",
+                        tint = if (isFirst) Color.LightGray else MaterialTheme.colorScheme.primary
+                    )
+                }
+                IconButton(
+                    onClick = onMoveDown, 
+                    enabled = !isLast,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        Icons.Default.KeyboardArrowDown, 
+                        contentDescription = "Move Down",
+                        tint = if (isLast) Color.LightGray else MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
             val icon = when {
                 club.type.contains("Driver", true) -> Icons.Default.SportsGolf
                 club.type.contains("Putter", true) -> Icons.Default.VerticalAlignBottom
@@ -119,24 +186,21 @@ fun ClubItem(club: Club, onEdit: () -> Unit, onDelete: () -> Unit) {
             Icon(
                 icon, 
                 contentDescription = null, 
-                modifier = Modifier.size(40.dp).padding(end = 16.dp),
+                modifier = Modifier.size(32.dp).padding(end = 8.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
             
             Column(modifier = Modifier.weight(1f)) {
-                Text(club.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(club.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text(
                     "${club.brand ?: stringResource(R.string.bag_generic)} • ${club.model ?: stringResource(R.string.bag_default)}", 
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.secondary
                 )
             }
             Row {
-                IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.bag_edit), tint = MaterialTheme.colorScheme.primary)
-                }
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.bag_delete), tint = MaterialTheme.colorScheme.error)
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.bag_delete), tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f), modifier = Modifier.size(20.dp))
                 }
             }
         }
@@ -166,6 +230,7 @@ fun ClubDialog(
         "Iron" -> (3..10).map { it.toString() }
         "Hibrido" -> (2..5).map { it.toString() }
         "Wedge" -> listOf("PW", "GW", "SW", "LW")
+        "Driver" -> listOf("1", "2", "3")
         else -> emptyList()
     }
 
@@ -198,6 +263,7 @@ fun ClubDialog(
                                         "Iron" -> (3..10).map { it.toString() }
                                         "Hibrido" -> (2..5).map { it.toString() }
                                         "Wedge" -> listOf("PW", "GW", "SW", "LW")
+                                        "Driver" -> listOf("1", "2", "3")
                                         else -> emptyList()
                                     }
                                     number = newNumbers.firstOrNull() ?: ""
@@ -271,7 +337,7 @@ fun ClubDialog(
         },
         confirmButton = {
             Button(onClick = { 
-                val name = if (type == "Putter" || type == "Driver") type else "$type $number"
+                val name = if (type == "Putter") type else "$type $number"
                 onSave(name, type, number.ifEmpty { null }, brand.ifEmpty { null }, model.ifEmpty { null }) 
             }) {
                 Text(if (initialClub == null) stringResource(R.string.common_add) else stringResource(R.string.common_save))

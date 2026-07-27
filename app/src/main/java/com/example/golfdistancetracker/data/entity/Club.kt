@@ -10,5 +10,6 @@ data class Club(
     val type: String, // "Driver", "Hibrido", "Iron", "Wedge", "Putter"
     val number: String? = null, // e.g., "3", "7", "PW"
     val brand: String? = null,
-    val model: String? = null
+    val model: String? = null,
+    val displayOrder: Int = 0
 )

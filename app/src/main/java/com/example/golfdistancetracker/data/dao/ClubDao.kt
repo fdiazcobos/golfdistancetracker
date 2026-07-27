@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ClubDao {
-    @Query("SELECT * FROM clubs")
+    @Query("SELECT * FROM clubs ORDER BY displayOrder ASC, id ASC")
     fun getAllClubs(): Flow<List<Club>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

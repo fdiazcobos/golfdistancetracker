@@ -10,7 +10,7 @@ import com.example.golfdistancetracker.data.entity.*
 
 @Database(
     entities = [Club::class, Shot::class, Course::class, Hole::class, Round::class, HoleScore::class, Player::class], 
-    version = 8, 
+    version = 9, 
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -32,10 +32,14 @@ abstract class GolfDatabase : RoomDatabase() {
         val MIGRATION_7_8 = object : Migration(7, 8) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("CREATE TABLE IF NOT EXISTS `players` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `isUser` INTEGER NOT NULL)")
-                // Insert default user
                 db.execSQL("INSERT INTO players (id, name, isUser) VALUES (1, 'Me', 1)")
-                // Add playerId column to hole_scores with default 1 (the user we just inserted)
                 db.execSQL("ALTER TABLE hole_scores ADD COLUMN playerId INTEGER NOT NULL DEFAULT 1")
+            }
+        }
+
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE clubs ADD COLUMN displayOrder INTEGER NOT NULL DEFAULT 0")
             }
         }
     }
