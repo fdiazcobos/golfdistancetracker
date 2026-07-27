@@ -7,9 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,11 +20,13 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.golfdistancetracker.R
 import com.example.golfdistancetracker.ui.viewmodel.StatsViewModel
+import com.example.golfdistancetracker.util.GolfTips
 
 @OptIn(ExperimentalMaterial3Api::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 @Composable
 fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit) {
     val stats by statsViewModel.clubStats.collectAsState()
+    val randomTip = remember { GolfTips.all.random() }
     
     Scaffold(
         topBar = { 
@@ -149,20 +149,38 @@ fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit
             }
             
             item {
-                Text(stringResource(R.string.dash_tips), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text("Pro Tip del Día", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(8.dp))
-                ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        AsyncImage(
-                            model = "https://images.unsplash.com/photo-1591491719183-8a994943bc7b?q=80&w=200&auto=format&fit=crop",
-                            contentDescription = null,
-                            modifier = Modifier.size(64.dp).clip(androidx.compose.foundation.shape.CircleShape),
-                            contentScale = ContentScale.Crop
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp), 
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Icon(
+                            Icons.Default.Lightbulb, 
+                            contentDescription = null, 
+                            tint = Color(0xFFFFB300),
+                            modifier = Modifier.size(32.dp)
                         )
                         Spacer(modifier = Modifier.width(16.dp))
                         Column {
-                            Text(stringResource(R.string.dash_did_you_know), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                            Text(stringResource(R.string.dash_tip_aim), style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                "💡 Sabías que...", 
+                                style = MaterialTheme.typography.titleSmall, 
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                randomTip, 
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         }
                     }
                 }
