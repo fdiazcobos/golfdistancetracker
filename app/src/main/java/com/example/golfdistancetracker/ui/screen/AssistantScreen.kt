@@ -1,6 +1,5 @@
 package com.example.golfdistancetracker.ui.screen
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,11 +10,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.golfdistancetracker.R
 import com.example.golfdistancetracker.ui.viewmodel.AssistantViewModel
 import com.example.golfdistancetracker.ui.viewmodel.CaddieTip
 import com.example.golfdistancetracker.ui.viewmodel.TipSeverity
@@ -24,6 +21,7 @@ import com.example.golfdistancetracker.ui.viewmodel.TipSeverity
 @Composable
 fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
     val tips by viewModel.tips.collectAsState()
+    val groupedTips = tips.groupBy { it.category }
 
     Scaffold(
         topBar = { 
@@ -39,15 +37,25 @@ fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
         ) {
             item {
                 Text(
-                    "Personalized Advice", 
+                    "Intelligent Coaching", 
                     style = MaterialTheme.typography.titleLarge, 
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
             
-            items(tips) { tip ->
-                TipCard(tip)
+            groupedTips.forEach { (category, categoryTips) ->
+                item {
+                    Text(
+                        category, 
+                        style = MaterialTheme.typography.labelLarge, 
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+                items(categoryTips) { tip ->
+                    TipCard(tip)
+                }
             }
         }
     }
@@ -64,16 +72,25 @@ fun TipCard(tip: CaddieTip) {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = color.copy(alpha = 0.05f)
+            containerColor = color.copy(alpha = 0.03f)
         )
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.Top) {
-            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(28.dp))
+            Icon(
+                icon, 
+                contentDescription = null, 
+                tint = color, 
+                modifier = Modifier.size(24.dp)
+            )
             Spacer(Modifier.width(16.dp))
             Column {
                 Text(tip.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(4.dp))
-                Text(tip.description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    tip.description, 
+                    style = MaterialTheme.typography.bodyMedium, 
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

@@ -23,6 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.golfdistancetracker.R
 import com.example.golfdistancetracker.data.entity.Shot
 import com.example.golfdistancetracker.data.entity.ShotType
+import com.example.golfdistancetracker.ui.component.ShotHeatmap
 import com.example.golfdistancetracker.ui.viewmodel.ClubStats
 import com.example.golfdistancetracker.ui.viewmodel.CourseAnalytics
 import com.example.golfdistancetracker.ui.viewmodel.StatsViewModel
@@ -75,7 +76,9 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
                             ClubStatsCard(
                                 stat = stat,
                                 includeMisshots = filters.includeMisshotsInDispersion,
-                                onToggleMisshots = { viewModel.toggleMisshotsInDispersion(it) }
+                                showHeatmap = filters.showHeatmap,
+                                onToggleMisshots = { viewModel.toggleMisshotsInDispersion(it) },
+                                onToggleHeatmap = { viewModel.toggleHeatmap(it) }
                             )
                         }
                     }
@@ -264,7 +267,13 @@ fun GappingAnalysisSection(stats: List<ClubStats>) {
 }
 
 @Composable
-fun ClubStatsCard(stat: ClubStats, includeMisshots: Boolean, onToggleMisshots: (Boolean) -> Unit) {
+fun ClubStatsCard(
+    stat: ClubStats, 
+    includeMisshots: Boolean, 
+    showHeatmap: Boolean,
+    onToggleMisshots: (Boolean) -> Unit,
+    onToggleHeatmap: (Boolean) -> Unit
+) {
     Card(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(stat.club.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
@@ -289,13 +298,24 @@ fun ClubStatsCard(stat: ClubStats, includeMisshots: Boolean, onToggleMisshots: (
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(stringResource(R.string.stats_dispersion), style = MaterialTheme.typography.labelMedium)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Show Misses", style = MaterialTheme.typography.labelSmall)
+                    IconButton(onClick = { onToggleHeatmap(!showHeatmap) }) {
+                        Icon(
+                            if (showHeatmap) Icons.Default.GpsFixed else Icons.Default.GridOn, 
+                            contentDescription = "Toggle Heatmap",
+                            tint = if (showHeatmap) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                        )
+                    }
+                    Text("Misses", style = MaterialTheme.typography.labelSmall)
                     Checkbox(checked = includeMisshots, onCheckedChange = onToggleMisshots)
                 }
             }
             
             val displayedShots = if (includeMisshots) stat.shots else stat.shots.filter { !it.isMishit }
-            ShotDispersionDiana(displayedShots)
+            if (showHeatmap) {
+                ShotHeatmap(displayedShots)
+            } else {
+                ShotDispersionDiana(displayedShots)
+            }
         }
     }
 }

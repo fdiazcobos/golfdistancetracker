@@ -98,7 +98,11 @@ fun GolfWearApp(viewModel: WearViewModel = hiltViewModel()) {
                     WearScreen.READY_TO_HIT -> ReadyToHitScreen(uiState, { viewModel.manualMarkShot() }, { viewModel.resetToStart() })
                     WearScreen.WALKING -> WalkingScreen(uiState, { viewModel.reachedBall() }, { viewModel.resetToStart() })
                     WearScreen.DIRECTION_INPUT -> DirectionPickerScreen({ viewModel.selectDirection(it) }, { viewModel.resetToStart() })
-                    WearScreen.PRACTICE_RATING -> PracticeRatingScreen({ viewModel.ratePracticeShot(it) })
+                    WearScreen.PRACTICE_RATING -> PracticeRatingScreen(
+                        uiState = uiState,
+                        onRated = { viewModel.ratePracticeShot(it) },
+                        onDirectionSelected = { viewModel.selectDirection(it) }
+                    )
                     WearScreen.SUMMARY -> SummaryScreen(uiState, { viewModel.resetToStart() })
                     WearScreen.SETTINGS -> WearSettingsScreen(uiState, { viewModel.updateAutoImpact(it) }, { viewModel.updateImpactThreshold(it) }, { viewModel.updateGpsSource(it) }, { viewModel.resetToStart() })
                 }
@@ -252,26 +256,41 @@ fun DirectionPickerScreen(onDirectionSelected: (String) -> Unit, onBack: () -> U
 }
 
 @Composable
-fun PracticeRatingScreen(onRated: (Int) -> Unit) {
+fun PracticeRatingScreen(uiState: WearUiState, onRated: (Int) -> Unit, onDirectionSelected: (String) -> Unit) {
     ScreenScaffold(timeText = { TimeText() }) { contentPadding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(contentPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("How was it?", style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(16.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(), 
-                horizontalArrangement = Arrangement.Center, 
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Reduced sizes slightly to ensure zero clipping on 40mm (Total width ~156dp)
-                Button(onClick = { onRated(0) }, modifier = Modifier.size(44.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.8f))) { Text("💩", fontSize = 22.sp) }
-                Spacer(Modifier.width(10.dp))
-                Button(onClick = { onRated(1) }, modifier = Modifier.size(52.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))) { Text("👍", fontSize = 26.sp) }
-                Spacer(Modifier.width(10.dp))
-                Button(onClick = { onRated(2) }, modifier = Modifier.size(44.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))) { Text("🔥", fontSize = 22.sp) }
+            if (uiState.pendingQuality == null) {
+                Text("How was it?", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(), 
+                    horizontalArrangement = Arrangement.Center, 
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(onClick = { onRated(0) }, modifier = Modifier.size(52.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.8f))) { Text("💩", fontSize = 28.sp) }
+                    Spacer(Modifier.width(10.dp))
+                    Button(onClick = { onRated(1) }, modifier = Modifier.size(64.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))) { Text("👍", fontSize = 30.sp) }
+                    Spacer(Modifier.width(10.dp))
+                    Button(onClick = { onRated(2) }, modifier = Modifier.size(52.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))) { Text("🔥", fontSize = 28.sp) }
+                }
+            } else {
+                Text("Direction?", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(), 
+                    horizontalArrangement = Arrangement.Center, 
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(onClick = { onDirectionSelected("Left") }, modifier = Modifier.size(54.dp), colors = ButtonDefaults.filledTonalButtonColors()) { Text("⬅️", fontSize = 26.sp) }
+                    Spacer(Modifier.width(10.dp))
+                    Button(onClick = { onDirectionSelected("Straight") }, modifier = Modifier.size(62.dp)) { Text("🎯", fontSize = 30.sp) }
+                    Spacer(Modifier.width(10.dp))
+                    Button(onClick = { onDirectionSelected("Right") }, modifier = Modifier.size(54.dp), colors = ButtonDefaults.filledTonalButtonColors()) { Text("➡️", fontSize = 26.sp) }
+                }
             }
         }
     }

@@ -307,7 +307,7 @@ class WearViewModel @Inject constructor(
                     dailyTotal = it.dailyTotal + 1
                 ) }
             } else {
-                // Optimistic Update for Practice
+                // Optimistically update counts for practice
                 val newUsage = state.clubUsageMap.toMutableMap()
                 newUsage[club.name] = (newUsage[club.name] ?: 0) + 1
                 _uiState.update { it.copy(

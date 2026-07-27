@@ -17,7 +17,8 @@ data class StatsFilters(
     val selectedClubIds: Set<Long> = emptySet(),
     val shotType: ShotType? = null,
     val startDate: Long? = null,
-    val includeMisshotsInDispersion: Boolean = true
+    val includeMisshotsInDispersion: Boolean = true,
+    val showHeatmap: Boolean = false
 )
 
 data class CourseAnalytics(
@@ -129,6 +130,10 @@ class StatsViewModel @Inject constructor(
 
     fun toggleMisshotsInDispersion(include: Boolean) {
         _filters.update { it.copy(includeMisshotsInDispersion = include) }
+    }
+
+    fun toggleHeatmap(show: Boolean) {
+        _filters.update { it.copy(showHeatmap = show) }
     }
 
     fun resetAllStats() {
