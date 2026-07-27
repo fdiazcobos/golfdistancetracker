@@ -71,6 +71,7 @@ class WearViewModel @Inject constructor(
     private val dataClient = Wearable.getDataClient(context)
     private val capabilityClient = Wearable.getCapabilityClient(context)
     private val messageClient = Wearable.getMessageClient(context)
+    private val nodeClient = Wearable.getNodeClient(context)
 
     private val _uiState = MutableStateFlow(WearUiState())
     val uiState = _uiState.asStateFlow()
@@ -80,7 +81,6 @@ class WearViewModel @Inject constructor(
         messageClient.addListener(this)
         capabilityClient.addListener(this, "golf_phone_app")
         
-        checkPhoneCapability()
         fetchInitialData()
 
         viewModelScope.launch {
@@ -106,42 +106,34 @@ class WearViewModel @Inject constructor(
             }.collect()
         }
 
-        // Periodic status updates
+        // Periodic status and connection updates
         viewModelScope.launch {
             while(true) {
-                val isConnected = locationHelper.isPhoneConnected()
-                val loc = if (_uiState.value.isTracking) locationHelper.getCurrentLocation() else null
-                
-                _uiState.update { it.copy(
-                    currentLocation = loc,
-                    isUsingPhoneGps = isConnected && _uiState.value.gpsSource == "Phone",
-                    isPhoneAppActive = isConnected
-                ) }
-                
-                if (_uiState.value.screen == WearScreen.WALKING) {
-                    updateWalkingDistance()
+                try {
+                    val nodes = nodeClient.connectedNodes.await()
+                    val isConnected = nodes.isNotEmpty()
+                    
+                    val loc = if (_uiState.value.isTracking) locationHelper.getCurrentLocation() else null
+                    
+                    _uiState.update { it.copy(
+                        currentLocation = loc,
+                        isPhoneAppActive = isConnected,
+                        isUsingPhoneGps = isConnected && it.gpsSource == "Phone"
+                    ) }
+                    
+                    if (_uiState.value.screen == WearScreen.WALKING) {
+                        updateWalkingDistance()
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Connection check loop failed", e)
                 }
-                kotlinx.coroutines.delay(2000)
-            }
-        }
-    }
-
-    private fun checkPhoneCapability() {
-        viewModelScope.launch {
-            try {
-                val capabilityInfo = capabilityClient.getCapability("golf_phone_app", CapabilityClient.FILTER_REACHABLE).await()
-                _uiState.update { it.copy(isPhoneAppActive = capabilityInfo.nodes.isNotEmpty()) }
-            } catch (e: Exception) {
-                Log.e(TAG, "Capability check failed", e)
+                kotlinx.coroutines.delay(3000)
             }
         }
     }
 
     override fun onCapabilityChanged(capabilityInfo: CapabilityInfo) {
         _uiState.update { it.copy(isPhoneAppActive = capabilityInfo.nodes.isNotEmpty()) }
-        if (capabilityInfo.nodes.isNotEmpty()) {
-            fetchInitialData() 
-        }
     }
 
     private fun fetchInitialData() {
@@ -176,7 +168,6 @@ class WearViewModel @Inject constructor(
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
         if (messageEvent.path == "/shot_saved_ack") {
-            Log.d(TAG, "Shot ACK received from phone")
             _uiState.update { it.copy(isSyncingShot = false, message = "Saved!") }
         }
     }

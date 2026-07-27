@@ -11,6 +11,7 @@ import com.example.golfdistancetracker.data.repository.GolfRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 
 data class StatsFilters(
@@ -48,6 +49,19 @@ data class ClubStats(
     val qualityBreakdown: QualityBreakdown = QualityBreakdown()
 )
 
+enum class SessionType { PLAY, PRACTICE }
+
+data class HistorySession(
+    val id: String,
+    val type: SessionType,
+    val date: Long,
+    val title: String,
+    val shotsCount: Int,
+    val accuracy: Double,
+    val trend: Double?, // positive = better than average
+    val qualityBreakdown: QualityBreakdown
+)
+
 @HiltViewModel
 class StatsViewModel @Inject constructor(
     private val repository: GolfRepository,
@@ -71,21 +85,14 @@ class StatsViewModel @Inject constructor(
             }
             
             val total = filteredShots.size.toDouble()
-            val breakdown = if (total > 0) {
-                QualityBreakdown(
-                    misshotPct = filteredShots.count { it.isMishit }.toDouble() / total,
-                    poorPct = filteredShots.count { !it.isMishit && it.quality == 0 }.toDouble() / total,
-                    goodPct = filteredShots.count { !it.isMishit && it.quality == 1 }.toDouble() / total,
-                    greatPct = filteredShots.count { !it.isMishit && it.quality == 2 }.toDouble() / total
-                )
-            } else QualityBreakdown()
+            val breakdown = calculateBreakdown(filteredShots)
 
             val avgDist = filteredShots.mapNotNull { it.distance }.average().takeIf { !it.isNaN() }
             val avgLatDev = filteredShots.mapNotNull { it.lateralDeviation }.average().takeIf { !it.isNaN() }
             val mishits = filteredShots.count { it.isMishit }
             
             val accurateShots = filteredShots.count { 
-                it.quality == 2 || (it.deviation != null && Math.abs(it.deviation) < 0.5f) 
+                it.quality == 2 || (it.deviation != null && Math.abs(it.deviation!!) < 0.5f) 
             }
             val accuracy = if (total > 0) accurateShots.toDouble() / total else 0.0
 
@@ -123,6 +130,75 @@ class StatsViewModel @Inject constructor(
             )
         }.filter { it.roundsCount > 0 }.sortedBy { it.averageScore ?: Double.MAX_VALUE }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    @kotlinx.coroutines.ExperimentalCoroutinesApi
+    val historySessions = combine(
+        shotDao.getAllShots(),
+        roundDao.getAllRounds(),
+        courseDao.getAllCourses(),
+        clubStats
+    ) { allShots, allRounds, allCourses, stats ->
+        val sessions = mutableListOf<HistorySession>()
+        val courseMap = allCourses.associateBy { it.id }
+        
+        // Lifetime average accuracy for trend
+        val totalShots = stats.sumOf { it.shots.size }
+        val lifetimeAccuracy = if (totalShots > 0) stats.sumOf { it.accuracyPct * it.shots.size } / totalShots else 0.0
+
+        // 1. Practice Sessions (Grouped by practiceSessionId or Day)
+        val practiceShots = allShots.filter { it.shotType == ShotType.DRIVING_RANGE }
+        val groupedPractice = practiceShots.groupBy { 
+            it.practiceSessionId ?: getDayString(it.timestamp)
+        }
+
+        groupedPractice.forEach { (sid, shots) ->
+            val accuracy = shots.count { it.quality == 2 }.toDouble() / shots.size
+            sessions.add(HistorySession(
+                id = sid,
+                type = SessionType.PRACTICE,
+                date = shots.first().timestamp,
+                title = "Driving Range Session",
+                shotsCount = shots.size,
+                accuracy = accuracy,
+                trend = if (lifetimeAccuracy > 0) accuracy - lifetimeAccuracy else null,
+                qualityBreakdown = calculateBreakdown(shots)
+            ))
+        }
+
+        // 2. Play Rounds
+        allRounds.forEach { round ->
+            // For now accuracy is 0 as we don't link shots to rounds yet, but we have total score
+            sessions.add(HistorySession(
+                id = "round_${round.id}",
+                type = SessionType.PLAY,
+                date = round.timestamp,
+                title = courseMap[round.courseId]?.name ?: "Golf Round",
+                shotsCount = round.totalScore,
+                accuracy = 0.0, 
+                trend = null,
+                qualityBreakdown = QualityBreakdown()
+            ))
+        }
+
+        sessions.sortedByDescending { it.date }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private fun calculateBreakdown(shots: List<Shot>): QualityBreakdown {
+        val total = shots.size.toDouble()
+        return if (total > 0) {
+            QualityBreakdown(
+                misshotPct = shots.count { it.isMishit }.toDouble() / total,
+                poorPct = shots.count { !it.isMishit && it.quality == 0 }.toDouble() / total,
+                goodPct = shots.count { !it.isMishit && it.quality == 1 }.toDouble() / total,
+                greatPct = shots.count { !it.isMishit && it.quality == 2 }.toDouble() / total
+            )
+        } else QualityBreakdown()
+    }
+
+    private fun getDayString(timestamp: Long): String {
+        val cal = Calendar.getInstance().apply { timeInMillis = timestamp }
+        return "${cal.get(Calendar.YEAR)}-${cal.get(Calendar.DAY_OF_YEAR)}"
+    }
 
     fun updateShotTypeFilter(type: ShotType?) {
         _filters.update { it.copy(shotType = type) }
