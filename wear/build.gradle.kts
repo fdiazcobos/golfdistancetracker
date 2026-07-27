@@ -9,23 +9,34 @@ android {
     namespace = "com.example.golfdistancetracker.wear"
     compileSdk = 37
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(project.property("golf_keystore_file") as String)
+            storePassword = project.property("golf_keystore_password") as String
+            keyAlias = project.property("golf_key_alias") as String
+            keyPassword = project.property("golf_key_password") as String
+        }
+    }
+
     defaultConfig {
         applicationId = "com.example.golfdistancetracker"
         minSdk = 30
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 17 // Syncing with mobile logic code range
+        versionName = "0.3.14"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {

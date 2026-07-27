@@ -9,6 +9,15 @@ android {
     namespace = "com.example.golfdistancetracker"
     compileSdk = 37
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(project.property("golf_keystore_file") as String)
+            storePassword = project.property("golf_keystore_password") as String
+            keyAlias = project.property("golf_key_alias") as String
+            keyPassword = project.property("golf_key_password") as String
+        }
+    }
+
     defaultConfig {
         applicationId = "com.example.golfdistancetracker"
         minSdk = 29
@@ -21,9 +30,13 @@ android {
 
     buildTypes {
         release {
-            optimization {
-                enable = false
-            }
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
