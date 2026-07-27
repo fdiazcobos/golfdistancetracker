@@ -13,8 +13,8 @@ android {
         applicationId = "com.example.golfdistancetracker"
         minSdk = 29
         targetSdk = 37
-        versionCode = 21
-        versionName = "0.3.18"
+        versionCode = 28
+        versionName = "0.3.25"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

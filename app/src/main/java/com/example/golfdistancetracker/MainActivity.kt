@@ -220,6 +220,7 @@ fun MainApp(authManager: AuthManager) {
                         composable("scorecard") { ScorecardScreen() }
                         composable("settings") { SettingsScreen() }
                         composable("assistant") { AssistantScreen() }
+                        composable("manual") { ManualScreen(onBack = { navController.popBackStack() }) }
                     }
 
                     // Global Connectivity Indicator

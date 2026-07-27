@@ -96,6 +96,14 @@ fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit
                         color = MaterialTheme.colorScheme.secondaryContainer
                     )
                 }
+                Spacer(Modifier.height(12.dp))
+                DashboardActionButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { onNavigate("manual") },
+                    icon = Icons.AutoMirrored.Filled.MenuBook,
+                    label = "Librito de Golf (Guía Pro)",
+                    color = MaterialTheme.colorScheme.tertiaryContainer
+                )
             }
 
             item {
