@@ -59,7 +59,8 @@ data class HistorySession(
     val shotsCount: Int,
     val accuracy: Double,
     val trend: Double?, // positive = better than average
-    val qualityBreakdown: QualityBreakdown
+    val qualityBreakdown: QualityBreakdown,
+    val originalId: Long? = null // Round ID if PLAY
 )
 
 @HiltViewModel
@@ -141,23 +142,20 @@ class StatsViewModel @Inject constructor(
         val sessions = mutableListOf<HistorySession>()
         val courseMap = allCourses.associateBy { it.id }
         
-        // Lifetime average accuracy for trend
-        val totalShots = stats.sumOf { it.shots.size }
-        val lifetimeAccuracy = if (totalShots > 0) stats.sumOf { it.accuracyPct * it.shots.size } / totalShots else 0.0
+        val totalShotsCount = stats.sumOf { it.shots.size }
+        val lifetimeAccuracy = if (totalShotsCount > 0) stats.sumOf { it.accuracyPct * it.shots.size } / totalShotsCount else 0.0
 
-        // 1. Practice Sessions (Grouped by practiceSessionId or Day)
+        // 1. Practice Sessions (Grouped strictly by day to unify phone and watch)
         val practiceShots = allShots.filter { it.shotType == ShotType.DRIVING_RANGE }
-        val groupedPractice = practiceShots.groupBy { 
-            it.practiceSessionId ?: getDayString(it.timestamp)
-        }
+        val groupedByDay = practiceShots.groupBy { getDayKey(it.timestamp) }
 
-        groupedPractice.forEach { (sid, shots) ->
+        groupedByDay.forEach { (dayKey, shots) ->
             val accuracy = shots.count { it.quality == 2 }.toDouble() / shots.size
             sessions.add(HistorySession(
-                id = sid,
+                id = "practice_$dayKey",
                 type = SessionType.PRACTICE,
                 date = shots.first().timestamp,
-                title = "Driving Range Session",
+                title = "Daily Practice Summary",
                 shotsCount = shots.size,
                 accuracy = accuracy,
                 trend = if (lifetimeAccuracy > 0) accuracy - lifetimeAccuracy else null,
@@ -167,7 +165,6 @@ class StatsViewModel @Inject constructor(
 
         // 2. Play Rounds
         allRounds.forEach { round ->
-            // For now accuracy is 0 as we don't link shots to rounds yet, but we have total score
             sessions.add(HistorySession(
                 id = "round_${round.id}",
                 type = SessionType.PLAY,
@@ -176,7 +173,8 @@ class StatsViewModel @Inject constructor(
                 shotsCount = round.totalScore,
                 accuracy = 0.0, 
                 trend = null,
-                qualityBreakdown = QualityBreakdown()
+                qualityBreakdown = QualityBreakdown(),
+                originalId = round.id
             ))
         }
 
@@ -195,9 +193,29 @@ class StatsViewModel @Inject constructor(
         } else QualityBreakdown()
     }
 
-    private fun getDayString(timestamp: Long): String {
+    private fun getDayKey(timestamp: Long): String {
         val cal = Calendar.getInstance().apply { timeInMillis = timestamp }
         return "${cal.get(Calendar.YEAR)}-${cal.get(Calendar.DAY_OF_YEAR)}"
+    }
+
+    fun deleteSession(session: HistorySession) {
+        viewModelScope.launch {
+            if (session.type == SessionType.PLAY) {
+                session.originalId?.let { roundDao.deleteRoundById(it) }
+            } else {
+                // Delete all practice shots for that day
+                val cal = Calendar.getInstance().apply { timeInMillis = session.date }
+                cal.set(Calendar.HOUR_OF_DAY, 0)
+                cal.set(Calendar.MINUTE, 0)
+                cal.set(Calendar.SECOND, 0)
+                cal.set(Calendar.MILLISECOND, 0)
+                val start = cal.timeInMillis
+                cal.add(Calendar.DAY_OF_YEAR, 1)
+                val end = cal.timeInMillis - 1
+                
+                shotDao.deleteShotsInRange(ShotType.DRIVING_RANGE, start, end)
+            }
+        }
     }
 
     fun updateShotTypeFilter(type: ShotType?) {

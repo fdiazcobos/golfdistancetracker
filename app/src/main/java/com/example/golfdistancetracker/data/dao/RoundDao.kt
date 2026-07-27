@@ -25,6 +25,9 @@ interface RoundDao {
     @Update
     suspend fun updateRound(round: Round)
 
+    @Query("DELETE FROM rounds WHERE id = :roundId")
+    suspend fun deleteRoundById(roundId: Long)
+
     @Delete
     suspend fun deleteRound(round: Round)
 }

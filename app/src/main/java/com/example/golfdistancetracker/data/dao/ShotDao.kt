@@ -18,6 +18,9 @@ interface ShotDao {
     @Insert
     suspend fun insertShot(shot: Shot)
 
+    @Query("DELETE FROM shots WHERE shotType = :type AND timestamp >= :start AND timestamp <= :end")
+    suspend fun deleteShotsInRange(type: com.example.golfdistancetracker.data.entity.ShotType, start: Long, end: Long)
+
     @Query("DELETE FROM shots")
     suspend fun deleteAllShots()
 }

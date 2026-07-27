@@ -149,7 +149,7 @@ fun WearSettingsScreen(uiState: WearUiState, onUpdateAuto: (Boolean) -> Unit, on
                 }
             }
         }
-        item { Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) { Text("v0.3.13", style = MaterialTheme.typography.labelSmall); Text(stringResource(R.string.settings_build_date), style = MaterialTheme.typography.labelSmall, color = Color.Gray, textAlign = TextAlign.Center) } }
+        item { Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) { Text("v0.3.15", style = MaterialTheme.typography.labelSmall); Text(stringResource(R.string.settings_build_date), style = MaterialTheme.typography.labelSmall, color = Color.Gray, textAlign = TextAlign.Center) } }
         item { TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth().padding(bottom = 28.dp)) { Text("Done") } }
     }
 }

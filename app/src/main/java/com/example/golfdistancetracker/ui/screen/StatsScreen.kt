@@ -40,6 +40,7 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
     val historySessions by viewModel.historySessions.collectAsState()
     val filters by viewModel.filters.collectAsState()
     var showResetDialog by remember { mutableStateOf(false) }
+    var sessionToDelete by remember { mutableStateOf<HistorySession?>(null) }
     var statsMode by remember { mutableIntStateOf(0) } // 0: Clubs, 1: Courses, 2: History
 
     Scaffold(
@@ -97,7 +98,10 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
                 2 -> {
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
                         items(historySessions) { session ->
-                            HistorySessionCard(session)
+                            HistorySessionCard(
+                                session = session,
+                                onDelete = { sessionToDelete = session }
+                            )
                         }
                     }
                 }
@@ -120,6 +124,26 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
                 },
                 dismissButton = {
                     TextButton(onClick = { showResetDialog = false }) { Text(stringResource(R.string.common_cancel)) }
+                }
+            )
+        }
+
+        if (sessionToDelete != null) {
+            AlertDialog(
+                onDismissRequest = { sessionToDelete = null },
+                title = { Text("Delete Session?") },
+                text = { Text("Are you sure you want to remove this session from your history? This will also remove the shots from your club statistics.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            sessionToDelete?.let { viewModel.deleteSession(it) }
+                            sessionToDelete = null
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) { Text("Delete") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { sessionToDelete = null }) { Text("Cancel") }
                 }
             )
         }
@@ -151,21 +175,26 @@ fun FilterSection(selectedType: ShotType?, onTypeSelect: (ShotType?) -> Unit) {
 }
 
 @Composable
-fun HistorySessionCard(session: HistorySession) {
+fun HistorySessionCard(session: HistorySession, onDelete: () -> Unit) {
     val sdf = SimpleDateFormat("EEEE, MMM dd", Locale.getDefault())
     ElevatedCard(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Column {
-                    Text(session.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(session.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(sdf.format(Date(session.date)), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                 }
                 
-                Surface(
-                    color = if (session.type == SessionType.PLAY) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(session.type.name, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        color = if (session.type == SessionType.PLAY) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(session.type.name, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall)
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f), modifier = Modifier.size(20.dp))
+                    }
                 }
             }
             
@@ -173,7 +202,7 @@ fun HistorySessionCard(session: HistorySession) {
             
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Column {
-                    Text("${session.shotsCount} Shots", style = MaterialTheme.typography.bodyMedium)
+                    Text("${session.shotsCount} ${if(session.type == SessionType.PLAY) "Strokes" else "Shots"}", style = MaterialTheme.typography.bodyMedium)
                     if (session.type == SessionType.PRACTICE) {
                         Text("Accuracy: ${(session.accuracy * 100).toInt()}%", style = MaterialTheme.typography.labelSmall)
                     }
@@ -181,7 +210,7 @@ fun HistorySessionCard(session: HistorySession) {
                 
                 session.trend?.let { trend ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        val isPositive = trend > 0.02 // 2% buffer
+                        val isPositive = trend > 0.02
                         Icon(
                             if (isPositive) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown,
                             contentDescription = null,
@@ -290,17 +319,22 @@ fun PracticeLoadSection(stats: List<ClubStats>) {
         practiceStats.forEach { stat ->
             val totalBalls = stat.shots.size
             Column(modifier = Modifier.padding(vertical = 12.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    verticalAlignment = Alignment.Bottom, 
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text(
                         stat.club.name, 
-                        style = MaterialTheme.typography.titleMedium, 
+                        style = MaterialTheme.typography.titleLarge, 
                         fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f)
                     )
                     Text(
                         "$totalBalls balls", 
                         style = MaterialTheme.typography.labelMedium, 
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.secondary,
                         fontWeight = FontWeight.Bold
                     )
                 }
