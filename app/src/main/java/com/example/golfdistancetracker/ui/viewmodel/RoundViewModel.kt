@@ -107,6 +107,14 @@ class RoundViewModel @Inject constructor(
     fun updateHoleScore(score: HoleScore) {
         viewModelScope.launch {
             roundDao.insertHoleScore(score)
+            // Update total score in Round table
+            _uiState.value.currentRound?.let { round ->
+                val allScores = _uiState.value.holeScores.map { 
+                    if (it.id == score.id) score else it 
+                }
+                val total = allScores.sumOf { it.strokes }
+                roundDao.updateRound(round.copy(totalScore = total))
+            }
         }
     }
 }

@@ -178,7 +178,7 @@ class StatsViewModel @Inject constructor(
             ))
         }
 
-        sessions.sortedByDescending { it.date }
+        sessions.filter { it.shotsCount > 0 }.sortedByDescending { it.date }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private fun calculateBreakdown(shots: List<Shot>): QualityBreakdown {
