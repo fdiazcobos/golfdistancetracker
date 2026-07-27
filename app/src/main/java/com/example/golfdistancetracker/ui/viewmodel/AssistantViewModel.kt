@@ -34,13 +34,16 @@ class AssistantViewModel @Inject constructor(
         // 1. Performance Bias: Practice vs Field
         analyzePracticeVsField(stats, generatedTips)
 
-        // 2. Club Overlaps
+        // 2. Club Overlaps & Gapping
         analyzeClubGapping(stats, generatedTips)
 
-        // 3. Specific Club Patterns
+        // 3. Specific Club Patterns & Miss Heat
         stats.forEach { clubStat ->
             analyzeClubPatterns(clubStat, generatedTips)
         }
+
+        // 4. Progress Check
+        // We could add logic here to compare last 10 shots vs previous shots
 
         generatedTips.ifEmpty { 
             listOf(CaddieTip("Steady Progress", "Continue practicing to uncover deeper insights into your game.", TipSeverity.INFO, "General")) 
@@ -52,13 +55,13 @@ class AssistantViewModel @Inject constructor(
         val allPracticeShots = stats.flatMap { it.shots }.filter { it.shotType == ShotType.DRIVING_RANGE }
 
         if (allFieldShots.size >= 10 && allPracticeShots.size >= 10) {
-            val fieldAccuracy = allFieldShots.count { it.quality == 2 || (it.lateralDeviation != null && Math.abs(it.lateralDeviation!!) < 10) }.toDouble() / allFieldShots.size
-            val practiceAccuracy = allPracticeShots.count { it.quality == 2 || (it.deviation != null && Math.abs(it.deviation!!) < 0.5f) }.toDouble() / allPracticeShots.size
+            val fieldAccuracy = allFieldShots.count { it.quality == 2 || (it.lateralDeviation != null && Math.abs(it.lateralDeviation) < 10) }.toDouble() / allFieldShots.size
+            val practiceAccuracy = allPracticeShots.count { it.quality == 2 || (it.deviation != null && Math.abs(it.deviation) < 0.5f) }.toDouble() / allPracticeShots.size
 
             if (practiceAccuracy > fieldAccuracy + 0.2) {
                 tips.add(CaddieTip(
                     "Driving Range Pro", 
-                    "Your practice accuracy is much higher than on the course. Try implementing a pre-shot routine to bridge the gap.",
+                    "Your practice accuracy is much higher than on the course. Focus on your pre-shot routine during practice to simulate course pressure.",
                     TipSeverity.WARNING,
                     "Consistency"
                 ))
@@ -71,19 +74,19 @@ class AssistantViewModel @Inject constructor(
         
         sortedStats.windowed(2).forEach { (higher, lower) ->
             val gap = higher.averageDistance!! - lower.averageDistance!!
-            if (gap < 5.0) {
+            if (gap < 6.0) {
                 tips.add(CaddieTip(
-                    "Redundant Clubs?", 
-                    "Your ${higher.club.name} and ${lower.club.name} travel almost the same distance. You might only need one of them.",
+                    "Overlap Warning: ${higher.club.name} & ${lower.club.name}", 
+                    "These clubs have a gap of only ${String.format("%.1f", gap)}m. You might be carrying two clubs for the same job.",
                     TipSeverity.INFO,
-                    "Bag Gapping"
+                    "Bag Management"
                 ))
-            } else if (gap > 20.0) {
+            } else if (gap > 22.0) {
                 tips.add(CaddieTip(
-                    "Large Distance Gap", 
-                    "There is a ${gap.toInt()}m gap between your ${higher.club.name} and ${lower.club.name}. Consider adding a club in between.",
+                    "Large Gap: ${higher.club.name} to ${lower.club.name}", 
+                    "There's a ${gap.toInt()}m gap here. You might struggle to hit precise targets in between these distances.",
                     TipSeverity.WARNING,
-                    "Bag Gapping"
+                    "Bag Management"
                 ))
             }
         }
@@ -100,25 +103,25 @@ class AssistantViewModel @Inject constructor(
             
             if (leftMisses.toDouble() / misses.size > 0.65) {
                 tips.add(CaddieTip(
-                    "Hook Pattern: ${clubStat.club.name}", 
-                    "You tend to pull this club to the left. Try checking your alignment or relaxing your grip.",
+                    "Left Bias: ${clubStat.club.name}", 
+                    "Most of your misses are to the Left (Hooks/Pulls). Check your aim and ensure you're not closing the face too early.",
                     TipSeverity.WARNING,
                     "Shot Patterns"
                 ))
             } else if (rightMisses.toDouble() / misses.size > 0.65) {
                 tips.add(CaddieTip(
-                    "Slice Pattern: ${clubStat.club.name}", 
-                    "You have a strong tendency to miss right. Focus on closing the face through impact.",
+                    "Right Bias: ${clubStat.club.name}", 
+                    "You have a strong tendency to miss to the Right (Slices/Pushes). Try maintaining a stronger grip or smoother release.",
                     TipSeverity.WARNING,
                     "Shot Patterns"
                 ))
             }
         }
 
-        if (clubStat.accuracyPct > 0.75) {
+        if (clubStat.accuracyPct > 0.8) {
             tips.add(CaddieTip(
-                "Money Club: ${clubStat.club.name}", 
-                "Your accuracy with this club is outstanding. It's your safest bet for narrow fairways.",
+                "Sniper Status: ${clubStat.club.name}", 
+                "Your consistency with this club is top-tier. Use it with confidence for narrow targets.",
                 TipSeverity.SUCCESS,
                 "Consistency"
             ))

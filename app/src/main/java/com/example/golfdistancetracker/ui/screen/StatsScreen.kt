@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,26 +20,27 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.golfdistancetracker.R
 import com.example.golfdistancetracker.data.entity.Shot
 import com.example.golfdistancetracker.data.entity.ShotType
 import com.example.golfdistancetracker.ui.component.ShotHeatmap
-import com.example.golfdistancetracker.ui.viewmodel.ClubStats
-import com.example.golfdistancetracker.ui.viewmodel.CourseAnalytics
-import com.example.golfdistancetracker.ui.viewmodel.StatsViewModel
+import com.example.golfdistancetracker.ui.viewmodel.*
 import com.example.golfdistancetracker.util.UnitConverter
-import java.util.Locale
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 @Composable
 fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
     val clubStats by viewModel.clubStats.collectAsState()
     val courseStats by viewModel.courseStats.collectAsState()
+    val historySessions by viewModel.historySessions.collectAsState()
     val filters by viewModel.filters.collectAsState()
     var showResetDialog by remember { mutableStateOf(false) }
-    var statsMode by remember { mutableStateOf(0) } // 0: Clubs, 1: Courses
+    var statsMode by remember { mutableIntStateOf(0) } // 0: Clubs, 1: Courses, 2: History
 
     Scaffold(
         topBar = { 
@@ -51,43 +54,51 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
             ) 
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
-            // Stats Mode Switcher
+        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
             TabRow(selectedTabIndex = statsMode) {
                 Tab(selected = statsMode == 0, onClick = { statsMode = 0 }, text = { Text("Clubs") })
                 Tab(selected = statsMode == 1, onClick = { statsMode = 1 }, text = { Text("Courses") })
+                Tab(selected = statsMode == 2, onClick = { statsMode = 2 }, text = { Text("History") })
             }
 
-            if (statsMode == 0) {
-                // Filters
-                FilterSection(filters.shotType) { viewModel.updateShotTypeFilter(it) }
-                
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    item {
-                        if (filters.shotType == ShotType.DRIVING_RANGE) {
-                            PracticeLoadSection(clubStats)
-                        } else {
-                            GappingAnalysisSection(clubStats)
-                        }
-                    }
-                    
-                    items(clubStats) { stat ->
-                        if (stat.shots.isNotEmpty()) {
-                            ClubStatsCard(
-                                stat = stat,
-                                includeMisshots = filters.includeMisshotsInDispersion,
-                                showHeatmap = filters.showHeatmap,
-                                onToggleMisshots = { viewModel.toggleMisshotsInDispersion(it) },
-                                onToggleHeatmap = { viewModel.toggleHeatmap(it) }
-                            )
+            when (statsMode) {
+                0 -> {
+                    Column {
+                        FilterSection(filters.shotType) { viewModel.updateShotTypeFilter(it) }
+                        LazyColumn(modifier = Modifier.weight(1f)) {
+                            item {
+                                if (filters.shotType == ShotType.DRIVING_RANGE) {
+                                    PracticeLoadSection(clubStats)
+                                } else {
+                                    GappingAnalysisSection(clubStats)
+                                }
+                            }
+                            items(clubStats) { stat ->
+                                if (stat.shots.isNotEmpty()) {
+                                    ClubStatsCard(
+                                        stat = stat,
+                                        includeMisshots = filters.includeMisshotsInDispersion,
+                                        showHeatmap = filters.showHeatmap,
+                                        onToggleMisshots = { viewModel.toggleMisshotsInDispersion(it) },
+                                        onToggleHeatmap = { viewModel.toggleHeatmap(it) }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
-            } else {
-                // Course Analytics
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(courseStats) { analytics ->
-                        CourseAnalyticsCard(analytics)
+                1 -> {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items(courseStats) { analytics ->
+                            CourseAnalyticsCard(analytics)
+                        }
+                    }
+                }
+                2 -> {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items(historySessions) { session ->
+                            HistorySessionCard(session)
+                        }
                     }
                 }
             }
@@ -116,6 +127,86 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
 }
 
 @Composable
+fun FilterSection(selectedType: ShotType?, onTypeSelect: (ShotType?) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        FilterChip(
+            selected = selectedType == null,
+            onClick = { onTypeSelect(null) },
+            label = { Text(stringResource(R.string.stats_filter_all)) }
+        )
+        FilterChip(
+            selected = selectedType == ShotType.FIELD,
+            onClick = { onTypeSelect(ShotType.FIELD) },
+            label = { Text(stringResource(R.string.stats_filter_field)) }
+        )
+        FilterChip(
+            selected = selectedType == ShotType.DRIVING_RANGE,
+            onClick = { onTypeSelect(ShotType.DRIVING_RANGE) },
+            label = { Text(stringResource(R.string.stats_filter_practice)) }
+        )
+    }
+}
+
+@Composable
+fun HistorySessionCard(session: HistorySession) {
+    val sdf = SimpleDateFormat("EEEE, MMM dd", Locale.getDefault())
+    ElevatedCard(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Column {
+                    Text(session.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(sdf.format(Date(session.date)), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                }
+                
+                Surface(
+                    color = if (session.type == SessionType.PLAY) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(session.type.name, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall)
+                }
+            }
+            
+            Spacer(Modifier.height(12.dp))
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Column {
+                    Text("${session.shotsCount} Shots", style = MaterialTheme.typography.bodyMedium)
+                    if (session.type == SessionType.PRACTICE) {
+                        Text("Accuracy: ${(session.accuracy * 100).toInt()}%", style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+                
+                session.trend?.let { trend ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        val isPositive = trend > 0.02 // 2% buffer
+                        Icon(
+                            if (isPositive) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown,
+                            contentDescription = null,
+                            tint = if (isPositive) Color(0xFF2E7D32) else Color.Red,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            if (isPositive) "Improving" else "Below Avg",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (isPositive) Color(0xFF2E7D32) else Color.Red
+                        )
+                    }
+                }
+            }
+            
+            if (session.type == SessionType.PRACTICE) {
+                Spacer(Modifier.height(12.dp))
+                QualityBar(session.qualityBreakdown)
+            }
+        }
+    }
+}
+
+@Composable
 fun CourseAnalyticsCard(analytics: CourseAnalytics) {
     Card(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -129,141 +220,8 @@ fun CourseAnalyticsCard(analytics: CourseAnalytics) {
                 MetricItem("Best Round", analytics.bestScore?.toString() ?: "-")
                 MetricItem("Rounds", analytics.roundsCount.toString())
             }
-
-            // More detailed breakdown could go here (e.g. recent rounds list)
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun FilterSection(selectedType: ShotType?, onTypeSelect: (ShotType?) -> Unit) {
-    LazyRow(
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        item {
-            FilterChip(
-                selected = selectedType == null,
-                onClick = { onTypeSelect(null) },
-                label = { Text(stringResource(R.string.stats_filter_all)) }
-            )
-        }
-        item {
-            FilterChip(
-                selected = selectedType == ShotType.FIELD,
-                onClick = { onTypeSelect(ShotType.FIELD) },
-                label = { Text(stringResource(R.string.stats_filter_field)) }
-            )
-        }
-        item {
-            FilterChip(
-                selected = selectedType == ShotType.DRIVING_RANGE,
-                onClick = { onTypeSelect(ShotType.DRIVING_RANGE) },
-                label = { Text(stringResource(R.string.stats_filter_practice)) }
-            )
-        }
-    }
-}
-
-@Composable
-fun PracticeLoadSection(stats: List<ClubStats>) {
-    val practiceStats = stats.filter { it.shots.isNotEmpty() }
-    if (practiceStats.isEmpty()) return
-
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text("Practice Volume & Consistency", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(20.dp))
-        
-        practiceStats.forEach { stat ->
-            val totalBalls = stat.shots.size
-            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        stat.club.name, 
-                        style = MaterialTheme.typography.titleMedium, 
-                        fontWeight = FontWeight.ExtraBold,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        "$totalBalls balls", 
-                        style = MaterialTheme.typography.labelMedium, 
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                
-                Spacer(Modifier.height(8.dp))
-                
-                Box(modifier = Modifier.fillMaxWidth().height(52.dp)) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f), 
-                                RoundedCornerShape(8.dp)
-                            )
-                    )
-                    
-                    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp), verticalArrangement = Arrangement.Center) {
-                        QualityBar(stat.qualityBreakdown)
-                    }
-                }
-            }
-        }
-    }
-    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-}
-
-@Composable
-fun GappingAnalysisSection(stats: List<ClubStats>) {
-    if (stats.size < 2) return
-
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text(stringResource(R.string.stats_gapping), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(16.dp))
-        
-        stats.forEach { stat ->
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
-                Text(stat.club.name, modifier = Modifier.width(80.dp), style = MaterialTheme.typography.labelMedium)
-                
-                Box(modifier = Modifier.weight(1f).height(24.dp)) {
-                    val maxDist = stats.maxOf { it.averageDistance ?: 1.0 }
-                    val progress = (stat.averageDistance ?: 0.0) / maxDist
-                    
-                    Box(modifier = Modifier.fillMaxWidth(progress.toFloat()).fillMaxHeight().background(MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp)))
-                    
-                    Text(
-                        UnitConverter.formatDistance(stat.averageDistance, stat.unit), 
-                        modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp),
-                        color = if (progress > 0.8) Color.White else Color.Black,
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                }
-            }
-            
-            stat.gapToNext?.let { gap ->
-                val isLargeGap = gap > 15.0
-                
-                Row(modifier = Modifier.padding(start = 80.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        if (isLargeGap) Icons.Default.Warning else Icons.Default.VerticalAlignBottom,
-                        contentDescription = null,
-                        modifier = Modifier.size(12.dp),
-                        tint = if (isLargeGap) Color(0xFFD32F2F) else Color.Gray
-                    )
-                    Text(
-                        stringResource(R.string.stats_gap, UnitConverter.formatDistance(gap, stat.unit)),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (isLargeGap) Color(0xFFD32F2F) else Color.Gray,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                    if (isLargeGap) Text(stringResource(R.string.stats_large_gap), color = Color(0xFFD32F2F), style = MaterialTheme.typography.labelSmall)
-                }
-            }
-        }
-    }
-    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 }
 
 @Composable
@@ -321,7 +279,108 @@ fun ClubStatsCard(
 }
 
 @Composable
-fun QualityBar(breakdown: com.example.golfdistancetracker.ui.viewmodel.QualityBreakdown) {
+fun PracticeLoadSection(stats: List<ClubStats>) {
+    val practiceStats = stats.filter { it.shots.isNotEmpty() }
+    if (practiceStats.isEmpty()) return
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Practice Volume & Consistency", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(20.dp))
+        
+        practiceStats.forEach { stat ->
+            val totalBalls = stat.shots.size
+            Column(modifier = Modifier.padding(vertical = 12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        stat.club.name, 
+                        style = MaterialTheme.typography.titleMedium, 
+                        fontWeight = FontWeight.ExtraBold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        "$totalBalls balls", 
+                        style = MaterialTheme.typography.labelMedium, 
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                
+                Spacer(Modifier.height(8.dp))
+                
+                Box(modifier = Modifier.fillMaxWidth().height(52.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f), 
+                                RoundedCornerShape(8.dp)
+                            )
+                    )
+                    
+                    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp), verticalArrangement = Arrangement.Center) {
+                        QualityBar(stat.qualityBreakdown)
+                    }
+                }
+            }
+        }
+    }
+    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+}
+
+@Composable
+fun GappingAnalysisSection(stats: List<ClubStats>) {
+    val filteredStats = stats.filter { it.averageDistance != null }
+    if (filteredStats.size < 2) return
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text(stringResource(R.string.stats_gapping), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(16.dp))
+        
+        filteredStats.forEach { stat ->
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
+                Text(stat.club.name, modifier = Modifier.width(80.dp), style = MaterialTheme.typography.labelMedium)
+                
+                Box(modifier = Modifier.weight(1f).height(24.dp)) {
+                    val maxDist = filteredStats.maxOf { it.averageDistance ?: 1.0 }
+                    val progress = (stat.averageDistance ?: 0.0) / maxDist
+                    
+                    Box(modifier = Modifier.fillMaxWidth(progress.toFloat()).fillMaxHeight().background(MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp)))
+                    
+                    Text(
+                        UnitConverter.formatDistance(stat.averageDistance, stat.unit), 
+                        modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp),
+                        color = if (progress > 0.8) Color.White else Color.Black,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+            }
+            
+            stat.gapToNext?.let { gap ->
+                val isLargeGap = gap > 15.0
+                
+                Row(modifier = Modifier.padding(start = 80.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        if (isLargeGap) Icons.Default.Warning else Icons.Default.VerticalAlignBottom,
+                        contentDescription = null,
+                        modifier = Modifier.size(12.dp),
+                        tint = if (isLargeGap) Color(0xFFD32F2F) else Color.Gray
+                    )
+                    Text(
+                        stringResource(R.string.stats_gap, UnitConverter.formatDistance(gap, stat.unit)),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isLargeGap) Color(0xFFD32F2F) else Color.Gray,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                    if (isLargeGap) Text(stringResource(R.string.stats_large_gap), color = Color(0xFFD32F2F), style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+    }
+    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+}
+
+@Composable
+fun QualityBar(breakdown: QualityBreakdown) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(modifier = Modifier.fillMaxWidth().height(16.dp).clip(RoundedCornerShape(8.dp))) {
             if (breakdown.misshotPct > 0) Box(modifier = Modifier.weight(breakdown.misshotPct.toFloat()).fillMaxHeight().background(Color.Red))
@@ -330,7 +389,6 @@ fun QualityBar(breakdown: com.example.golfdistancetracker.ui.viewmodel.QualityBr
             if (breakdown.greatPct > 0) Box(modifier = Modifier.weight(breakdown.greatPct.toFloat()).fillMaxHeight().background(Color(0xFF2E7D32)))
         }
         
-        // Multi-line Legend with Localized Labels
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             QualityLegendItem(stringResource(R.string.practice_misshot), breakdown.misshotPct, Color.Red)
             QualityLegendItem(stringResource(R.string.practice_malo), breakdown.poorPct, Color.Gray)
