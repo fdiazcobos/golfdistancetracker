@@ -6,9 +6,9 @@
     <string name="nav_field">Field</string>
     <string name="nav_practice">Practice</string>
     <string name="nav_bag">Bag</string>
-    <string name="nav_stats">Stats</string>
-    <string name="nav_scorecard">Score</string>
-    <string name="nav_setup">Setup</string>
+    <string name="nav_stats">Statistics</string>
+    <string name="nav_scorecard">Scorecard</string>
+    <string name="nav_setup">Config</string>
 
     <!-- Dashboard -->
     <string name="dash_title">GOLF TRACKER</string>
@@ -30,11 +30,11 @@
     <string name="session_select_club">Select your club:</string>
     <string name="session_caddie_recommendation">Caddie Recommendation: %1$s</string>
     <string name="session_gps_ready">GPS Ready</string>
-    <string name="session_gps_waiting">Waiting for GPS accuracy...</string>
+    <string name="session_gps_waiting">Waiting for GPS accuracy…</string>
     <string name="session_location">Location: %1$s</string>
     <string name="session_mark_start">Mark Start Point</string>
     <string name="session_mark_end">Mark End Point &amp; Save</string>
-    <string name="session_shot_progress">Shot in progress...</string>
+    <string name="session_shot_progress">Shot in progress…</string>
     <string name="session_distance">Distance: %1$s</string>
     <string name="session_used">Used: %1$d</string>
     <string name="session_plays_like">Plays Like: %1$s</string>
@@ -55,16 +55,17 @@
     <string name="practice_title">Driving Range Practice</string>
     <string name="practice_select_club">Select Club</string>
     <string name="practice_direction">Direction / Deviation</string>
-    <string name="practice_quality">Shot Quality</string>
-    <string name="practice_misshot">MISSHOT</string>
+    <string name="practice_quality">Contact Quality</string>
+    <string name="practice_mishit">MISHIT</string>
+    <string name="practice_topped">TOPPED</string>
+    <string name="practice_fat">FAT SHOT</string>
+    <string name="practice_clean">CLEAN</string>
+    <string name="practice_pure">PURE</string>
     <string name="practice_muy_corto">Very Short</string>
     <string name="practice_corto">Short</string>
     <string name="practice_bueno">Good</string>
     <string name="practice_largo">Long</string>
     <string name="practice_muy_largo">Very Long</string>
-    <string name="practice_malo">Poor</string>
-    <string name="practice_bien">Nice</string>
-    <string name="practice_muy_bien">Great</string>
     <string name="practice_saved">Shot Saved!</string>
     <string name="practice_register">Register Shot</string>
     <string name="practice_dev_far_left">Far Left</string>
@@ -100,7 +101,7 @@
     <string name="stats_accuracy">Accuracy</string>
     <string name="stats_avg_dev">Avg Dev</string>
     <string name="stats_mishits">Mishits</string>
-    <string name="stats_dispersion">Shot Dispersion (Diana)</string>
+    <string name="stats_dispersion">Shot Dispersion</string>
     <string name="stats_no_data">No data</string>
     <string name="stats_filter_all">All</string>
     <string name="stats_filter_field">Field</string>
@@ -156,8 +157,8 @@
     <string name="settings_lang_en">English</string>
     <string name="settings_lang_es">Spanish</string>
     <string name="settings_about">About</string>
-    <string name="settings_version">Golf Tracker v0.3.26</string>
-    <string name="settings_build_date">Build: July 27, 2026 - 8:30 PM</string>
+    <string name="settings_version">Golf Tracker v0.3.29</string>
+    <string name="settings_build_date">Build: August 04, 2026 – 10:15 AM</string>
     <string name="settings_device">Built for Samsung S26 Ultra</string>
 
     <!-- General -->

@@ -102,17 +102,7 @@ fun DrivingRangeScreen(viewModel: DrivingRangeViewModel = hiltViewModel()) {
             Text(stringResource(R.string.practice_quality), style = MaterialTheme.typography.titleMedium)
             val isPutter = uiState.selectedClub?.type == "Putter"
             
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                if (!isPutter) {
-                    FilterChip(
-                        selected = uiState.isMishit,
-                        onClick = { viewModel.toggleMishit(!uiState.isMishit) },
-                        label = { Text(stringResource(R.string.practice_misshot)) },
-                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = MaterialTheme.colorScheme.errorContainer)
-                    )
-                    VerticalDivider(modifier = Modifier.height(32.dp).padding(horizontal = 4.dp))
-                }
-                
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                 val qualityOptions = if (isPutter) {
                     listOf(
                         stringResource(R.string.practice_muy_corto) to -2, 
@@ -123,20 +113,30 @@ fun DrivingRangeScreen(viewModel: DrivingRangeViewModel = hiltViewModel()) {
                     )
                 } else {
                     listOf(
-                        stringResource(R.string.practice_malo) to 0, 
-                        stringResource(R.string.practice_bien) to 1, 
-                        stringResource(R.string.practice_muy_bien) to 2
+                        stringResource(R.string.practice_mishit) to 0, 
+                        stringResource(R.string.practice_topped) to 1, 
+                        stringResource(R.string.practice_fat) to 2,
+                        stringResource(R.string.practice_clean) to 3,
+                        stringResource(R.string.practice_pure) to 4
                     )
                 }
 
-                qualityOptions.forEach { (label, value) ->
-                    Button(
-                        onClick = { viewModel.updateQuality(value) },
-                        colors = if (uiState.quality == value) ButtonDefaults.buttonColors() else ButtonDefaults.filledTonalButtonColors(),
-                        modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Text(label, style = MaterialTheme.typography.labelSmall)
+                // Split into two rows if not putter for better spacing
+                val rows = if (isPutter) listOf(qualityOptions) else qualityOptions.chunked(3)
+                
+                rows.forEach { rowOptions ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        rowOptions.forEach { (label, value) ->
+                            val isSelected = uiState.quality == value
+                            Button(
+                                onClick = { viewModel.updateQuality(value) },
+                                colors = if (isSelected) ButtonDefaults.buttonColors() else ButtonDefaults.filledTonalButtonColors(),
+                                modifier = Modifier.weight(1f),
+                                contentPadding = PaddingValues(4.dp)
+                            ) {
+                                Text(label, style = MaterialTheme.typography.labelSmall, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                            }
+                        }
                     }
                 }
             }

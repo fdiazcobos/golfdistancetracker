@@ -31,10 +31,11 @@ data class CourseAnalytics(
 )
 
 data class QualityBreakdown(
-    val misshotPct: Double = 0.0,
-    val poorPct: Double = 0.0,
-    val goodPct: Double = 0.0,
-    val greatPct: Double = 0.0
+    val mishitPct: Double = 0.0,
+    val toppedPct: Double = 0.0,
+    val fatPct: Double = 0.0,
+    val cleanPct: Double = 0.0,
+    val purePct: Double = 0.0
 )
 
 data class ClubStats(
@@ -90,10 +91,10 @@ class StatsViewModel @Inject constructor(
 
             val avgDist = filteredShots.mapNotNull { it.distance }.average().takeIf { !it.isNaN() }
             val avgLatDev = filteredShots.mapNotNull { it.lateralDeviation }.average().takeIf { !it.isNaN() }
-            val mishits = filteredShots.count { it.isMishit }
+            val mishits = filteredShots.count { it.isMishit || it.quality == 0 }
             
             val accurateShots = filteredShots.count { 
-                it.quality == 2 || (it.deviation != null && Math.abs(it.deviation!!) < 0.5f) 
+                it.quality == 4 || it.quality == 3 || (it.deviation != null && Math.abs(it.deviation) < 0.5f) 
             }
             val accuracy = if (total > 0) accurateShots.toDouble() / total else 0.0
 
@@ -150,7 +151,7 @@ class StatsViewModel @Inject constructor(
         val groupedByDay = practiceShots.groupBy { getDayKey(it.timestamp) }
 
         groupedByDay.forEach { (dayKey, shots) ->
-            val accuracy = shots.count { it.quality == 2 }.toDouble() / shots.size
+            val accuracy = shots.count { it.quality == 4 || it.quality == 3 }.toDouble() / shots.size
             sessions.add(HistorySession(
                 id = "practice_$dayKey",
                 type = SessionType.PRACTICE,
@@ -185,10 +186,11 @@ class StatsViewModel @Inject constructor(
         val total = shots.size.toDouble()
         return if (total > 0) {
             QualityBreakdown(
-                misshotPct = shots.count { it.isMishit }.toDouble() / total,
-                poorPct = shots.count { !it.isMishit && it.quality == 0 }.toDouble() / total,
-                goodPct = shots.count { !it.isMishit && it.quality == 1 }.toDouble() / total,
-                greatPct = shots.count { !it.isMishit && it.quality == 2 }.toDouble() / total
+                mishitPct = shots.count { it.isMishit || it.quality == 0 }.toDouble() / total,
+                toppedPct = shots.count { !it.isMishit && it.quality == 1 }.toDouble() / total,
+                fatPct = shots.count { !it.isMishit && it.quality == 2 }.toDouble() / total,
+                cleanPct = shots.count { !it.isMishit && it.quality == 3 }.toDouble() / total,
+                purePct = shots.count { !it.isMishit && it.quality == 4 }.toDouble() / total
             )
         } else QualityBreakdown()
     }

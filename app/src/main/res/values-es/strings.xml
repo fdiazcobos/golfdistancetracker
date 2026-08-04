@@ -6,9 +6,9 @@
     <string name="nav_field">Campo</string>
     <string name="nav_practice">Práctica</string>
     <string name="nav_bag">Bolsa</string>
-    <string name="nav_stats">Estadist.</string>
-    <string name="nav_scorecard">Puntos</string>
-    <string name="nav_setup">Ajustes</string>
+    <string name="nav_stats">Estadísticas</string>
+    <string name="nav_scorecard">Tarjeta</string>
+    <string name="nav_setup">Configuración</string>
 
     <!-- Dashboard -->
     <string name="dash_title">RASTREADOR GOLF</string>
@@ -30,14 +30,14 @@
     <string name="session_select_club">Selecciona tu palo:</string>
     <string name="session_caddie_recommendation">Recomendación Caddie: %1$s</string>
     <string name="session_gps_ready">GPS Listo</string>
-    <string name="session_gps_waiting">Esperando precisión GPS...</string>
+    <string name="session_gps_waiting">Esperando precisión GPS…</string>
     <string name="session_location">Ubicación: %1$s</string>
     <string name="session_mark_start">Marcar Punto Inicio</string>
     <string name="session_mark_end">Marcar Fin y Guardar</string>
-    <string name="session_shot_progress">Golpe en progreso...</string>
+    <string name="session_shot_progress">Golpe en progreso…</string>
     <string name="session_distance">Distancia: %1$s</string>
     <string name="session_used">Usado: %1$d</string>
-    <string name="session_plays_like">Se siente como: %1$s</string>
+    <string name="session_plays_like">Distancia Real: %1$s</string>
     <string name="session_target_dist">Distancia Objetivo (%1$s)</string>
 
     <!-- Post-Shot Summary -->
@@ -55,16 +55,17 @@
     <string name="practice_title">Práctica Driving Range</string>
     <string name="practice_select_club">Seleccionar Palo</string>
     <string name="practice_direction">Dirección / Desviación</string>
-    <string name="practice_quality">Calidad del Golpe</string>
-    <string name="practice_misshot">MISSHOT</string>
+    <string name="practice_quality">Calidad de Contacto</string>
+    <string name="practice_mishit">Pifia</string>
+    <string name="practice_topped">Topada</string>
+    <string name="practice_fat">Pesada</string>
+    <string name="practice_clean">Limpio</string>
+    <string name="practice_pure">Puro</string>
     <string name="practice_muy_corto">Muy Corto</string>
     <string name="practice_corto">Corto</string>
     <string name="practice_bueno">Bueno</string>
     <string name="practice_largo">Largo</string>
     <string name="practice_muy_largo">Muy Largo</string>
-    <string name="practice_malo">Malo</string>
-    <string name="practice_bien">Bien</string>
-    <string name="practice_muy_bien">Muy Bien</string>
     <string name="practice_saved">¡Golpe Guardado!</string>
     <string name="practice_register">Registrar Golpe</string>
     <string name="practice_dev_far_left">Mucho Izq</string>
@@ -100,7 +101,7 @@
     <string name="stats_accuracy">Precisión</string>
     <string name="stats_avg_dev">Desv. Media</string>
     <string name="stats_mishits">Pifias</string>
-    <string name="stats_dispersion">Dispersión (Diana)</string>
+    <string name="stats_dispersion">Dispersión</string>
     <string name="stats_no_data">Sin datos</string>
     <string name="stats_filter_all">Todos</string>
     <string name="stats_filter_field">Campo</string>
@@ -143,7 +144,7 @@
     <string name="score_other">Otro</string>
 
     <!-- Settings -->
-    <string name="settings_title">Ajustes</string>
+    <string name="settings_title">Configuración</string>
     <string name="settings_units">Unidades de Distancia</string>
     <string name="settings_meters">Metros (m)</string>
     <string name="settings_yards">Yardas (yd)</string>
@@ -156,8 +157,8 @@
     <string name="settings_lang_en">Inglés</string>
     <string name="settings_lang_es">Español</string>
     <string name="settings_about">Acerca de</string>
-    <string name="settings_version">Rastreador de Golf v0.3.26</string>
-    <string name="settings_build_date">Compilación: 27 de Julio, 2026 - 8:30 PM</string>
+    <string name="settings_version">Rastreador de Golf v0.3.29</string>
+    <string name="settings_build_date">Compilación: 04 de Agosto, 2026 – 10:15 AM</string>
     <string name="settings_device">Diseñado para Samsung S26 Ultra</string>
 
     <!-- General -->

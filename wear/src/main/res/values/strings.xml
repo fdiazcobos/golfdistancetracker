@@ -2,6 +2,25 @@
     <string name="app_name">Golf Tracker Wear</string>
     <string name="common_grant">Grant</string>
     <string name="perm_title">Permissions Required</string>
-    <string name="perm_desc">We need Location and Body Sensors to track your swing and distances.</string>
-    <string name="settings_build_date">Build: July 27, 2026 - 1:15 PM</string>
+    <string name="perm_desc">Need GPS to track your shot distances.</string>
+
+    <!-- Navigation -->
+    <string name="nav_play">PLAY</string>
+    <string name="nav_practice">PRACTICE</string>
+    <string name="nav_settings">SETTINGS</string>
+
+    <!-- Game States -->
+    <string name="state_ready">READY</string>
+    <string name="state_walking">WALKING</string>
+    <string name="state_direction">Direction?</string>
+    <string name="state_contact">Contact?</string>
+    <string name="state_saved">SHOT SAVED</string>
+
+    <!-- Controls -->
+    <string name="action_mark">MARK</string>
+    <string name="action_found">FOUND BALL</string>
+    <string name="action_done">DONE</string>
+    <string name="action_cancel">Cancel</string>
+
+    <string name="settings_build_date">Build: August 03, 2026 – 5:20 PM</string>
 </resources>

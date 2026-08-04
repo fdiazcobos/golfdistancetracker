@@ -2,6 +2,25 @@
     <string name="app_name">Rastreador de Golf</string>
     <string name="common_grant">Conceder</string>
     <string name="perm_title">Permisos Requeridos</string>
-    <string name="perm_desc">Necesitamos Ubicación y Sensores para rastrear tu swing y distancias.</string>
-    <string name="settings_build_date">Compilación: 27 de Julio, 2026 - 1:15 PM</string>
+    <string name="perm_desc">Necesitamos GPS para rastrear tus distancias de tiro.</string>
+
+    <!-- Navigation -->
+    <string name="nav_play">JUGAR</string>
+    <string name="nav_practice">PRÁCTICA</string>
+    <string name="nav_settings">AJUSTES</string>
+
+    <!-- Game States -->
+    <string name="state_ready">LISTO</string>
+    <string name="state_walking">CAMINANDO</string>
+    <string name="state_direction">¿Dirección?</string>
+    <string name="state_contact">¿Contacto?</string>
+    <string name="state_saved">TIRO GUARDADO</string>
+
+    <!-- Controls -->
+    <string name="action_mark">MARCAR</string>
+    <string name="action_found">PELOTA!</string>
+    <string name="action_done">HECHO</string>
+    <string name="action_cancel">Cancelar</string>
+
+    <string name="settings_build_date">Compilación: 03 de Agosto, 2026 – 5:20 PM</string>
 </resources>

@@ -23,13 +23,15 @@ import javax.inject.Inject
 data class WeatherInfo(
     val temp: Double,
     val windSpeed: Double,
-    val windDeg: Int
+    val windDeg: Int,
+    val lastUpdate: Long = System.currentTimeMillis()
 )
 
 data class SessionUiState(
     val selectedClub: Club? = null,
     val currentPosition: Location? = null,
     val currentHeading: Float = 0f,
+    val lockedTargetHeading: Float? = null,
     val intendedHeading: Float = 0f,
     val startLocation: Location? = null,
     val lastShotDistance: Double? = null,
@@ -42,6 +44,7 @@ data class SessionUiState(
     val weather: WeatherInfo? = null,
     val targetDistanceMeters: Double? = null,
     val playsLikeDistance: Double? = null,
+    val playsLikeAdjustmentMeters: Double = 0.0,
     val recommendedClub: Club? = null,
     val clubUsage: Map<Long, Int> = emptyMap(),
     val dailyTotalShots: Int = 0
@@ -89,7 +92,11 @@ class SessionViewModel @Inject constructor(
                     currentPosition = location,
                     isGpsReady = location.accuracy < 20
                 ) }
-                fetchWeather(location.latitude, location.longitude)
+                
+                val lastWeather = _uiState.value.weather
+                if (lastWeather == null || System.currentTimeMillis() - lastWeather.lastUpdate > 15 * 60 * 1000) {
+                    fetchWeather(location.latitude, location.longitude)
+                }
             }
         }
         viewModelScope.launch {
@@ -108,6 +115,8 @@ class SessionViewModel @Inject constructor(
     private suspend fun fetchWeather(lat: Double, lon: Double) {
         try {
             val key = preferenceManager.weatherApiKey.first()
+            if (key.isEmpty()) return
+            
             val response = weatherService.getWeather(lat, lon, key)
             _uiState.update { it.copy(
                 weather = WeatherInfo(response.main.temp, response.wind.speed, response.wind.deg)
@@ -124,20 +133,37 @@ class SessionViewModel @Inject constructor(
         val target = state.targetDistanceMeters ?: return
         val weather = state.weather
         
+        val headingToUse = state.lockedTargetHeading ?: state.currentHeading
+        
         val playsLike = if (weather != null) {
             CaddieBrain.calculatePlaysLikeDistance(
                 target,
                 weather.windSpeed,
                 weather.windDeg,
-                state.currentHeading
+                headingToUse,
+                weather.temp
             )
         } else target
 
         viewModelScope.launch {
             val stats = repository.clubStats.first()
             val recommendation = CaddieBrain.recommendClub(playsLike, stats)
-            _uiState.update { it.copy(playsLikeDistance = playsLike, recommendedClub = recommendation) }
+            _uiState.update { it.copy(
+                playsLikeDistance = playsLike, 
+                playsLikeAdjustmentMeters = playsLike - target,
+                recommendedClub = recommendation 
+            ) }
         }
+    }
+
+    fun lockTargetHeading() {
+        _uiState.update { it.copy(lockedTargetHeading = it.currentHeading) }
+        updateCaddieInsights()
+    }
+
+    fun clearLockedHeading() {
+        _uiState.update { it.copy(lockedTargetHeading = null) }
+        updateCaddieInsights()
     }
 
     @kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -151,7 +177,7 @@ class SessionViewModel @Inject constructor(
     }
 
     fun resetSession() {
-        _uiState.update { it.copy(selectedClub = null, startLocation = null, targetDistanceMeters = null, playsLikeDistance = null, showShotSummary = false) }
+        _uiState.update { it.copy(selectedClub = null, startLocation = null, targetDistanceMeters = null, playsLikeDistance = null, showShotSummary = false, lockedTargetHeading = null) }
     }
 
     fun closeSummary() {
@@ -175,7 +201,7 @@ class SessionViewModel @Inject constructor(
                 lastShotDistance = distance,
                 lastShotLatDev = latDev,
                 showShotSummary = true,
-                selectedClub = null // Reset selection for next shot
+                selectedClub = null 
             ) }
         }
     }
@@ -204,7 +230,6 @@ class SessionViewModel @Inject constructor(
             val normActual = (actualBearing + 360) % 360
             val normIntended = (intended + 360) % 360
             
-            // Angular difference (signed)
             var angleDiff = (normActual - normIntended).toDouble()
             if (angleDiff > 180) angleDiff -= 360
             if (angleDiff < -180) angleDiff += 360
@@ -213,7 +238,6 @@ class SessionViewModel @Inject constructor(
             val latDev = distance * Math.sin(angleDiffRad)
 
             viewModelScope.launch {
-                // Calculate distance difference from average
                 val stats = repository.clubStats.first()
                 val clubStats = stats.find { it.club.id == club.id }
                 val avgDist = clubStats?.averageDistance

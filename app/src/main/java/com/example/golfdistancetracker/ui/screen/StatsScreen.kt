@@ -417,19 +417,21 @@ fun GappingAnalysisSection(stats: List<ClubStats>) {
 fun QualityBar(breakdown: QualityBreakdown) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(modifier = Modifier.fillMaxWidth().height(16.dp).clip(RoundedCornerShape(8.dp))) {
-            if (breakdown.misshotPct > 0) Box(modifier = Modifier.weight(breakdown.misshotPct.toFloat()).fillMaxHeight().background(Color.Red))
-            if (breakdown.poorPct > 0) Box(modifier = Modifier.weight(breakdown.poorPct.toFloat()).fillMaxHeight().background(Color.Gray))
-            if (breakdown.goodPct > 0) Box(modifier = Modifier.weight(breakdown.goodPct.toFloat()).fillMaxHeight().background(Color(0xFF1976D2)))
-            if (breakdown.greatPct > 0) Box(modifier = Modifier.weight(breakdown.greatPct.toFloat()).fillMaxHeight().background(Color(0xFF2E7D32)))
+            if (breakdown.mishitPct > 0) Box(modifier = Modifier.weight(breakdown.mishitPct.toFloat()).fillMaxHeight().background(Color.Red))
+            if (breakdown.toppedPct > 0) Box(modifier = Modifier.weight(breakdown.toppedPct.toFloat()).fillMaxHeight().background(Color(0xFFFF9800))) // Orange
+            if (breakdown.fatPct > 0) Box(modifier = Modifier.weight(breakdown.fatPct.toFloat()).fillMaxHeight().background(Color.Gray))
+            if (breakdown.cleanPct > 0) Box(modifier = Modifier.weight(breakdown.cleanPct.toFloat()).fillMaxHeight().background(Color(0xFF1976D2))) // Blue
+            if (breakdown.purePct > 0) Box(modifier = Modifier.weight(breakdown.purePct.toFloat()).fillMaxHeight().background(Color(0xFF2E7D32))) // Green
         }
         
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            QualityLegendItem(stringResource(R.string.practice_misshot), breakdown.misshotPct, Color.Red)
-            QualityLegendItem(stringResource(R.string.practice_malo), breakdown.poorPct, Color.Gray)
+            QualityLegendItem(stringResource(R.string.practice_mishit), breakdown.mishitPct, Color.Red)
+            QualityLegendItem(stringResource(R.string.practice_topped), breakdown.toppedPct, Color(0xFFFF9800))
+            QualityLegendItem(stringResource(R.string.practice_fat), breakdown.fatPct, Color.Gray)
         }
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            QualityLegendItem(stringResource(R.string.practice_bien), breakdown.goodPct, Color(0xFF1976D2))
-            QualityLegendItem(stringResource(R.string.practice_muy_bien), breakdown.greatPct, Color(0xFF2E7D32))
+            QualityLegendItem(stringResource(R.string.practice_clean), breakdown.cleanPct, Color(0xFF1976D2))
+            QualityLegendItem(stringResource(R.string.practice_pure), breakdown.purePct, Color(0xFF2E7D32))
         }
     }
 }
