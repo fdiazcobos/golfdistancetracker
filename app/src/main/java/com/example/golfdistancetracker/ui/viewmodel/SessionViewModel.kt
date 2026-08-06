@@ -15,6 +15,8 @@ import com.example.golfdistancetracker.data.repository.GolfRepository
 import com.example.golfdistancetracker.util.CaddieBrain
 import com.example.golfdistancetracker.util.CompassHelper
 import com.example.golfdistancetracker.util.LocationHelper
+import com.example.golfdistancetracker.util.SG_Category
+import com.example.golfdistancetracker.util.StrokesGainedEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -222,6 +224,8 @@ class SessionViewModel @Inject constructor(
         val start = _uiState.value.startLocation
         val end = _uiState.value.currentPosition
         val intended = _uiState.value.intendedHeading
+        val targetDist = _uiState.value.targetDistanceMeters
+        val lockedHeading = _uiState.value.lockedTargetHeading
         
         if (club != null && start != null && end != null) {
             val distance = start.distanceTo(end).toDouble()
@@ -236,6 +240,26 @@ class SessionViewModel @Inject constructor(
             
             val angleDiffRad = Math.toRadians(angleDiff)
             val latDev = distance * Math.sin(angleDiffRad)
+
+            // Strokes Gained Logic
+            var sgValue: Double? = null
+            var sgCat: String? = null
+            
+            if (targetDist != null && lockedHeading != null) {
+                // 1. Calculate Target Lat/Lon
+                val (targetLat, targetLon) = locationHelper.destinationPoint(
+                    start.latitude, start.longitude, lockedHeading, targetDist
+                )
+                
+                // 2. Calculate remaining distance to target
+                val endDist = locationHelper.calculateDistance(
+                    end.latitude, end.longitude, targetLat, targetLon
+                ).toDouble()
+                
+                // 3. Compute SG
+                sgValue = StrokesGainedEngine.calculateShotSG(targetDist, endDist)
+                sgCat = StrokesGainedEngine.getCategory(targetDist, club).name
+            }
 
             viewModelScope.launch {
                 val stats = repository.clubStats.first()
@@ -254,7 +278,9 @@ class SessionViewModel @Inject constructor(
                         distance = distance,
                         direction = normActual.toFloat(),
                         intendedHeading = normIntended,
-                        lateralDeviation = latDev
+                        lateralDeviation = latDev,
+                        strokesGained = sgValue,
+                        sgCategory = sgCat
                     )
                 )
 
@@ -266,7 +292,8 @@ class SessionViewModel @Inject constructor(
                     showShotSummary = true,
                     startLocation = null,
                     targetDistanceMeters = null,
-                    playsLikeDistance = null
+                    playsLikeDistance = null,
+                    lockedTargetHeading = null
                 ) }
             }
         }

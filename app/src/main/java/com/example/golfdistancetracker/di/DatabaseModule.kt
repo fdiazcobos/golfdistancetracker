@@ -20,7 +20,8 @@ object DatabaseModule {
             .addMigrations(
                 GolfDatabase.MIGRATION_6_7, 
                 GolfDatabase.MIGRATION_7_8,
-                GolfDatabase.MIGRATION_8_9
+                GolfDatabase.MIGRATION_8_9,
+                GolfDatabase.MIGRATION_9_10
             )
             .build()
     }

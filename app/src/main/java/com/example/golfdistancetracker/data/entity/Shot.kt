@@ -30,6 +30,10 @@ data class Shot(
     val quality: Int? = null, // 0 (Malo), 1 (Bien), 2 (Muy Bien)
     val isMishit: Boolean = false,
     val notes: String? = null,
+
+    // Strokes Gained Analytics
+    val strokesGained: Double? = null,
+    val sgCategory: String? = null, // TEE, APPROACH, ARG, PUTT
     
     val timestamp: Long = System.currentTimeMillis()
 )

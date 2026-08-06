@@ -30,6 +30,14 @@ data class CourseAnalytics(
     val rounds: List<Round>
 )
 
+data class SG_Metrics(
+    val offTheTee: Double = 0.0,
+    val approach: Double = 0.0,
+    val aroundTheGreen: Double = 0.0,
+    val putting: Double = 0.0,
+    val total: Double = 0.0
+)
+
 data class QualityBreakdown(
     val mishitPct: Double = 0.0,
     val toppedPct: Double = 0.0,
@@ -47,7 +55,8 @@ data class ClubStats(
     val shots: List<Shot>,
     val unit: DistanceUnit = DistanceUnit.METERS,
     val gapToNext: Double? = null,
-    val qualityBreakdown: QualityBreakdown = QualityBreakdown()
+    val qualityBreakdown: QualityBreakdown = QualityBreakdown(),
+    val sgMetrics: SG_Metrics = SG_Metrics()
 )
 
 enum class SessionType { PLAY, PRACTICE }
@@ -61,6 +70,7 @@ data class HistorySession(
     val accuracy: Double,
     val trend: Double?, // positive = better than average
     val qualityBreakdown: QualityBreakdown,
+    val sgMetrics: SG_Metrics = SG_Metrics(),
     val originalId: Long? = null // Round ID if PLAY
 )
 
@@ -88,6 +98,7 @@ class StatsViewModel @Inject constructor(
             
             val total = filteredShots.size.toDouble()
             val breakdown = calculateBreakdown(filteredShots)
+            val sg = calculateSGMetrics(filteredShots)
 
             val avgDist = filteredShots.mapNotNull { it.distance }.average().takeIf { !it.isNaN() }
             val avgLatDev = filteredShots.mapNotNull { it.lateralDeviation }.average().takeIf { !it.isNaN() }
@@ -104,7 +115,8 @@ class StatsViewModel @Inject constructor(
                 accuracyPct = accuracy,
                 mishitCount = mishits,
                 shots = filteredShots,
-                qualityBreakdown = breakdown
+                qualityBreakdown = breakdown,
+                sgMetrics = sg
             )
         }.sortedByDescending { it.averageDistance ?: 0.0 }
 
@@ -160,12 +172,14 @@ class StatsViewModel @Inject constructor(
                 shotsCount = shots.size,
                 accuracy = accuracy,
                 trend = if (lifetimeAccuracy > 0) accuracy - lifetimeAccuracy else null,
-                qualityBreakdown = calculateBreakdown(shots)
+                qualityBreakdown = calculateBreakdown(shots),
+                sgMetrics = calculateSGMetrics(shots)
             ))
         }
 
         // 2. Play Rounds
         allRounds.forEach { round ->
+            val roundShots = allShots.filter { Math.abs(it.timestamp - round.timestamp) < 5 * 60 * 60 * 1000 && it.shotType == ShotType.FIELD }
             sessions.add(HistorySession(
                 id = "round_${round.id}",
                 type = SessionType.PLAY,
@@ -175,12 +189,26 @@ class StatsViewModel @Inject constructor(
                 accuracy = 0.0, 
                 trend = null,
                 qualityBreakdown = QualityBreakdown(),
+                sgMetrics = calculateSGMetrics(roundShots),
                 originalId = round.id
             ))
         }
 
         sessions.filter { it.shotsCount > 0 }.sortedByDescending { it.date }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private fun calculateSGMetrics(shots: List<Shot>): SG_Metrics {
+        val sgShots = shots.filter { it.strokesGained != null }
+        if (sgShots.isEmpty()) return SG_Metrics()
+        
+        return SG_Metrics(
+            offTheTee = sgShots.filter { it.sgCategory == "TEE" }.mapNotNull { it.strokesGained }.sum(),
+            approach = sgShots.filter { it.sgCategory == "APPROACH" }.mapNotNull { it.strokesGained }.sum(),
+            aroundTheGreen = sgShots.filter { it.sgCategory == "ARG" }.mapNotNull { it.strokesGained }.sum(),
+            putting = sgShots.filter { it.sgCategory == "PUTT" }.mapNotNull { it.strokesGained }.sum(),
+            total = sgShots.mapNotNull { it.strokesGained }.sum()
+        )
+    }
 
     private fun calculateBreakdown(shots: List<Shot>): QualityBreakdown {
         val total = shots.size.toDouble()

@@ -7,6 +7,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,15 +22,32 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.golfdistancetracker.R
+import com.example.golfdistancetracker.ui.viewmodel.SG_Metrics
 import com.example.golfdistancetracker.ui.viewmodel.StatsViewModel
 import com.example.golfdistancetracker.util.GolfTips
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 @Composable
 fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit) {
     val stats by statsViewModel.clubStats.collectAsState()
     val randomTip = remember { GolfTips.all.random() }
+
+    // Performance Insight Logic
+    val totalSG = SG_Metrics(
+        offTheTee = stats.sumOf { it.sgMetrics.offTheTee },
+        approach = stats.sumOf { it.sgMetrics.approach },
+        aroundTheGreen = stats.sumOf { it.sgMetrics.aroundTheGreen },
+        putting = stats.sumOf { it.sgMetrics.putting }
+    )
     
+    val worstCategory = listOf(
+        "Off the Tee" to totalSG.offTheTee,
+        "Approach" to totalSG.approach,
+        "Around the Green" to totalSG.aroundTheGreen,
+        "Putting" to totalSG.putting
+    ).filter { it.second < -0.1 }.minByOrNull { it.second }
+
     Scaffold(
         topBar = { 
             CenterAlignedTopAppBar(
@@ -104,6 +124,27 @@ fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit
                     label = "Librito de Golf (Guía Pro)",
                     color = MaterialTheme.colorScheme.tertiaryContainer
                 )
+            }
+
+            item {
+                worstCategory?.let { (cat, sg) ->
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                    ) {
+                        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.AutoMirrored.Filled.TrendingDown, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                            Spacer(Modifier.width(16.dp))
+                            Column {
+                                Text("Insight de Rendimiento", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                                Text(
+                                    "Estás perdiendo ${String.format(Locale.US, "%.1f", Math.abs(sg))} golpes en $cat. ¡Enfócate en mejorar esta área!",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             item {

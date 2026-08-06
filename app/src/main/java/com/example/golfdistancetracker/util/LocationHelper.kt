@@ -32,4 +32,26 @@ class LocationHelper(context: Context) {
         Location.distanceBetween(startLat, startLon, endLat, endLon, results)
         return results[0] // distance in meters
     }
+
+    /**
+     * Calculates a coordinate given start, heading (degrees), and distance (meters).
+     */
+    fun destinationPoint(lat: Double, lon: Double, bearing: Float, distance: Double): Pair<Double, Double> {
+        val r = 6371000.0 // Earth radius in meters
+        val latRad = Math.toRadians(lat)
+        val lonRad = Math.toRadians(lon)
+        val bearingRad = Math.toRadians(bearing.toDouble())
+        val distRatio = distance / r
+
+        val destLatRad = Math.asin(
+            Math.sin(latRad) * Math.cos(distRatio) +
+                    Math.cos(latRad) * Math.sin(distRatio) * Math.cos(bearingRad)
+        )
+        val destLonRad = lonRad + Math.atan2(
+            Math.sin(bearingRad) * Math.sin(distRatio) * Math.cos(latRad),
+            Math.cos(distRatio) - Math.sin(latRad) * Math.sin(destLatRad)
+        )
+
+        return Math.toDegrees(destLatRad) to Math.toDegrees(destLonRad)
+    }
 }

@@ -65,11 +65,16 @@ fun StatsScreen(
                 Tab(selected = statsMode == 2, onClick = { statsMode = 2 }, text = { Text("History") })
             }
 
-            when (statsMode) {
+                    when (statsMode) {
                 0 -> {
                     Column {
                         FilterSection(filters.shotType) { viewModel.updateShotTypeFilter(it) }
                         LazyColumn(modifier = Modifier.weight(1f)) {
+                            item {
+                                if (filters.shotType == ShotType.FIELD || filters.shotType == null) {
+                                    StrokesGainedOverview(clubStats)
+                                }
+                            }
                             item {
                                 if (filters.shotType == ShotType.DRIVING_RANGE) {
                                     PracticeLoadSection(clubStats)
@@ -441,6 +446,63 @@ fun QualityBar(breakdown: QualityBreakdown) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             QualityLegendItem(stringResource(R.string.practice_clean), breakdown.cleanPct, Color(0xFF1976D2))
             QualityLegendItem(stringResource(R.string.practice_pure), breakdown.purePct, Color(0xFF2E7D32))
+        }
+    }
+}
+
+@Composable
+fun StrokesGainedOverview(stats: List<ClubStats>) {
+    val totalTEE = stats.sumOf { it.sgMetrics.offTheTee }
+    val totalAPP = stats.sumOf { it.sgMetrics.approach }
+    val totalARG = stats.sumOf { it.sgMetrics.aroundTheGreen }
+    val totalPUTT = stats.sumOf { it.sgMetrics.putting }
+    
+    if (totalTEE == 0.0 && totalAPP == 0.0 && totalARG == 0.0 && totalPUTT == 0.0) return
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Strokes Gained Analysis", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+        Text("Vs Scratch Benchmark", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+        
+        Spacer(Modifier.height(16.dp))
+        
+        SG_Bar("Off the Tee", totalTEE)
+        SG_Bar("Approach", totalAPP)
+        SG_Bar("Around Green", totalARG)
+        SG_Bar("Putting", totalPUTT)
+    }
+    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+}
+
+@Composable
+fun SG_Bar(label: String, value: Double) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, modifier = Modifier.width(100.dp), style = MaterialTheme.typography.labelMedium)
+        
+        val isPositive = value >= 0
+        val color = if (isPositive) Color(0xFF2E7D32) else Color.Red
+        
+        Box(modifier = Modifier.weight(1f).height(24.dp).background(Color.LightGray.copy(alpha = 0.2f), RoundedCornerShape(4.dp))) {
+            val absVal = Math.min(Math.abs(value), 5.0)
+            val widthPct = (absVal / 5.0).toFloat()
+            
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(widthPct)
+                    .align(if (isPositive) Alignment.CenterStart else Alignment.CenterEnd)
+                    .background(color, RoundedCornerShape(4.dp))
+            )
+            
+            Text(
+                text = String.format(Locale.US, "%+.2f", value),
+                modifier = Modifier.align(if (isPositive) Alignment.CenterEnd else Alignment.CenterStart).padding(horizontal = 8.dp),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = color
+            )
         }
     }
 }
