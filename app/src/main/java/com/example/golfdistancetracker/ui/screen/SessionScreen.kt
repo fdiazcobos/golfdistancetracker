@@ -21,6 +21,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -153,14 +154,23 @@ fun ClubSelectionGrid(
         ) {
             items(clubs) { club ->
                 val usage = uiState.clubUsage[club.id] ?: 0
+                val iconRes = when {
+                    club.type.contains("Driver", true) -> R.drawable.ic_club_driver
+                    club.type.contains("Putter", true) -> R.drawable.ic_club_putter
+                    club.type.contains("Wedge", true) -> R.drawable.ic_club_wedge
+                    club.type.contains("Hibrido", true) -> R.drawable.ic_club_hybrid
+                    else -> R.drawable.ic_club_iron
+                }
+                
                 Button(
                     onClick = { onSelect(club) },
-                    modifier = Modifier.height(72.dp),
+                    modifier = Modifier.height(80.dp),
                     colors = if (club == uiState.recommendedClub) ButtonDefaults.buttonColors() else ButtonDefaults.filledTonalButtonColors(),
                     contentPadding = PaddingValues(4.dp)
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(club.name, maxLines = 1)
+                        Icon(painterResource(iconRes), null, modifier = Modifier.size(24.dp))
+                        Text(club.name, maxLines = 1, style = MaterialTheme.typography.labelMedium)
                         if (usage > 0) {
                             Text(
                                 stringResource(R.string.session_used, usage), 

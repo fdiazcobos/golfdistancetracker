@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -104,14 +105,14 @@ fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit
                     DashboardActionButton(
                         modifier = Modifier.weight(1f),
                         onClick = { onNavigate("courses") },
-                        icon = Icons.Default.GolfCourse,
+                        painter = painterResource(R.drawable.ic_golf_flag),
                         label = stringResource(R.string.course_title),
                         color = MaterialTheme.colorScheme.primaryContainer
                     )
                     DashboardActionButton(
                         modifier = Modifier.weight(1f),
                         onClick = { onNavigate("scorecard") },
-                        icon = Icons.Default.Description,
+                        painter = painterResource(R.drawable.ic_golf_ball),
                         label = stringResource(R.string.score_title),
                         color = MaterialTheme.colorScheme.secondaryContainer
                     )
@@ -120,7 +121,7 @@ fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit
                 DashboardActionButton(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = { onNavigate("manual") },
-                    icon = Icons.AutoMirrored.Filled.MenuBook,
+                    painter = androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.AutoMirrored.Filled.MenuBook),
                     label = "Librito de Golf (Guía Pro)",
                     color = MaterialTheme.colorScheme.tertiaryContainer
                 )
@@ -231,7 +232,7 @@ fun DashboardScreen(statsViewModel: StatsViewModel, onNavigate: (String) -> Unit
 }
 
 @Composable
-fun DashboardActionButton(modifier: Modifier, onClick: () -> Unit, icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, color: Color) {
+fun DashboardActionButton(modifier: Modifier, onClick: () -> Unit, painter: androidx.compose.ui.graphics.painter.Painter, label: String, color: Color) {
     ElevatedButton(
         onClick = onClick,
         modifier = modifier.height(100.dp),
@@ -239,7 +240,7 @@ fun DashboardActionButton(modifier: Modifier, onClick: () -> Unit, icon: android
         colors = ButtonDefaults.elevatedButtonColors(containerColor = color)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(32.dp))
+            Icon(painter, contentDescription = null, modifier = Modifier.size(32.dp))
             Spacer(Modifier.height(4.dp))
             Text(label, style = MaterialTheme.typography.labelLarge)
         }

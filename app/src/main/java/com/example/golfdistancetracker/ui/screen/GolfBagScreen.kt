@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -176,15 +177,16 @@ fun ClubItem(
                 }
             }
 
-            val icon = when {
-                club.type.contains("Driver", true) -> Icons.Default.SportsGolf
-                club.type.contains("Putter", true) -> Icons.Default.VerticalAlignBottom
-                club.type.contains("Wedge", true) -> Icons.Default.Terrain
-                else -> Icons.Default.Hardware
+            val iconRes = when {
+                club.type.contains("Driver", true) -> R.drawable.ic_club_driver
+                club.type.contains("Putter", true) -> R.drawable.ic_club_putter
+                club.type.contains("Wedge", true) -> R.drawable.ic_club_wedge
+                club.type.contains("Hibrido", true) -> R.drawable.ic_club_hybrid
+                else -> R.drawable.ic_club_iron
             }
             
             Icon(
-                icon, 
+                painter = painterResource(id = iconRes), 
                 contentDescription = null, 
                 modifier = Modifier.size(32.dp).padding(end = 8.dp),
                 tint = MaterialTheme.colorScheme.primary
