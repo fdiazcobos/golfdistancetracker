@@ -157,8 +157,8 @@
     <string name="settings_lang_en">Inglés</string>
     <string name="settings_lang_es">Español</string>
     <string name="settings_about">Acerca de</string>
-    <string name="settings_version">Rastreador de Golf v0.3.29</string>
-    <string name="settings_build_date">Compilación: 04 de Agosto, 2026 – 10:15 AM</string>
+    <string name="settings_version">Rastreador de Golf v0.3.30</string>
+    <string name="settings_build_date">Compilación: 04 de Agosto, 2026 – 10:45 AM</string>
     <string name="settings_device">Diseñado para Samsung S26 Ultra</string>
 
     <!-- General -->

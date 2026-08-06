@@ -34,7 +34,10 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 @Composable
-fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
+fun StatsScreen(
+    viewModel: StatsViewModel = hiltViewModel(),
+    onNavigateToMap: (HistorySession) -> Unit = {}
+) {
     val clubStats by viewModel.clubStats.collectAsState()
     val courseStats by viewModel.courseStats.collectAsState()
     val historySessions by viewModel.historySessions.collectAsState()
@@ -100,7 +103,8 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
                         items(historySessions) { session ->
                             HistorySessionCard(
                                 session = session,
-                                onDelete = { sessionToDelete = session }
+                                onDelete = { sessionToDelete = session },
+                                onViewMap = onNavigateToMap
                             )
                         }
                     }
@@ -175,7 +179,7 @@ fun FilterSection(selectedType: ShotType?, onTypeSelect: (ShotType?) -> Unit) {
 }
 
 @Composable
-fun HistorySessionCard(session: HistorySession, onDelete: () -> Unit) {
+fun HistorySessionCard(session: HistorySession, onDelete: () -> Unit, onViewMap: (HistorySession) -> Unit) {
     val sdf = SimpleDateFormat("EEEE, MMM dd", Locale.getDefault())
     ElevatedCard(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -186,6 +190,11 @@ fun HistorySessionCard(session: HistorySession, onDelete: () -> Unit) {
                 }
                 
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (session.type == SessionType.PLAY) {
+                        IconButton(onClick = { onViewMap(session) }) {
+                            Icon(Icons.Default.Map, contentDescription = "View on Map", tint = MaterialTheme.colorScheme.primary)
+                        }
+                    }
                     Surface(
                         color = if (session.type == SessionType.PLAY) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
                         shape = RoundedCornerShape(12.dp)

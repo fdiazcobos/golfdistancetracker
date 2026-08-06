@@ -200,6 +200,20 @@ class StatsViewModel @Inject constructor(
         return "${cal.get(Calendar.YEAR)}-${cal.get(Calendar.DAY_OF_YEAR)}"
     }
 
+    fun getShotsForSession(session: HistorySession): Flow<List<Shot>> {
+        return shotDao.getAllShots().map { allShots ->
+            if (session.type == SessionType.PLAY) {
+                // Currently shots aren't strictly linked to rounds in the DB 
+                // but we can filter by timestamp range if needed, or by roundId if we had it.
+                // For now, let's assume we want to see shots near that round's timestamp
+                val margin = 5 * 60 * 60 * 1000 // 5 hours
+                allShots.filter { Math.abs(it.timestamp - session.date) < margin && it.shotType == ShotType.FIELD }
+            } else {
+                allShots.filter { it.shotType == ShotType.DRIVING_RANGE && getDayKey(it.timestamp) == session.id.removePrefix("practice_") }
+            }
+        }
+    }
+
     fun deleteSession(session: HistorySession) {
         viewModelScope.launch {
             if (session.type == SessionType.PLAY) {

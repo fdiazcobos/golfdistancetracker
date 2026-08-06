@@ -135,6 +135,7 @@ fun PermissionGuard(content: @Composable () -> Unit) {
     }
 }
 
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 @Composable
 fun MainApp(authManager: AuthManager) {
     val navController = rememberNavController()
@@ -216,11 +217,32 @@ fun MainApp(authManager: AuthManager) {
                         composable("practice") { DrivingRangeScreen() }
                         composable("courses") { CourseManagementScreen() }
                         composable("bag") { GolfBagScreen() }
-                        composable("stats") { StatsScreen() }
+                        composable("stats") { 
+                            StatsScreen(
+                                onNavigateToMap = { session ->
+                                    navController.navigate("shot_map/${session.id}")
+                                }
+                            ) 
+                        }
                         composable("scorecard") { ScorecardScreen() }
                         composable("settings") { SettingsScreen() }
                         composable("assistant") { AssistantScreen() }
                         composable("manual") { ManualScreen(onBack = { navController.popBackStack() }) }
+                        
+                        composable("shot_map/{sessionId}") { backStackEntry ->
+                            val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+                            val statsViewModel: com.example.golfdistancetracker.ui.viewmodel.StatsViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+                            val sessions by statsViewModel.historySessions.collectAsState()
+                            val session = sessions.find { it.id == sessionId }
+                            
+                            if (session != null) {
+                                ShotMapScreen(
+                                    session = session,
+                                    viewModel = statsViewModel,
+                                    onBack = { navController.popBackStack() }
+                                )
+                            }
+                        }
                     }
 
                     // Global Connectivity Indicator
